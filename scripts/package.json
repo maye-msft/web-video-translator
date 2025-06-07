@@ -1,0 +1,6 @@
+{
+  "name": "smoke-test-scripts",
+  "version": "1.0.0",
+  "description": "Headless smoke test scripts for web-video-translator",
+  "type": "commonjs"
+}

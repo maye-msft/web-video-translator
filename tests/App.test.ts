@@ -1,29 +1,36 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
-import App from '../src/App.vue'
-import IndexPage from '../src/components/IndexPage.vue'
+import App from '@/App.vue'
+
+// Create a minimal component for testing
+const MockStep1 = { template: '<div>Step 1: Upload Video</div>' }
 
 // Create mock router for testing
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: IndexPage, name: 'Home' },
-    { path: '/ffmpeg-test', component: { template: '<div>FFmpeg Test</div>' }, name: 'FFmpegTest' }
-  ]
+    { path: '/', redirect: '/step-1' },
+    { path: '/step-1', component: MockStep1, name: 'Step1' },
+    {
+      path: '/ffmpeg-test',
+      component: { template: '<div>FFmpeg Test</div>' },
+      name: 'FFmpegTest',
+    },
+  ],
 })
 
 describe('App.vue', () => {
   it('renders the navigation', async () => {
     const wrapper = mount(App, {
       global: {
-        plugins: [router]
-      }
+        plugins: [router],
+      },
     })
-    
+
     await router.push('/')
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.find('nav').exists()).toBe(true)
     expect(wrapper.text()).toContain('Web Video Translator')
     expect(wrapper.text()).toContain('Main App')
@@ -34,13 +41,13 @@ describe('App.vue', () => {
     const wrapper = mount(App, {
       global: {
         plugins: [router],
-        stubs: ['router-view']
-      }
+        stubs: ['router-view'],
+      },
     })
-    
+
     await router.push('/')
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.find('router-view-stub').exists()).toBe(true)
   })
 })
