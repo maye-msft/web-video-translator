@@ -18,13 +18,18 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
-    "@xenova/transformers": "^2.17.2"
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@xenova/transformers": "^2.17.2",
+    "vue": "^3.5.16"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-code": "^1.0.17",
     "@playwright/test": "^1.40.1",
     "@types/node": "^20.10.6",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.7.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
@@ -35,7 +40,8 @@
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.10",
-    "vitest": "^1.1.0"
+    "vitest": "^1.1.0",
+    "vue-tsc": "^2.2.10"
   },
-  "packageManager": "yarn@4.0.2"
+  "packageManager": "yarn@1.22.22"
 }
