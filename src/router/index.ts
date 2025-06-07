@@ -3,6 +3,7 @@ import IndexPage from '../components/IndexPage.vue'
 import FFmpegTest from '../components/FFmpegTest.vue'
 import WhisperTest from '../components/WhisperTest.vue'
 import MarianMTTest from '../components/MarianMTTest.vue'
+import SubtitleMerge from '../components/SubtitleMerge.vue'
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/translation-test',
     name: 'MarianMTTest',
     component: MarianMTTest,
+  },
+  {
+    path: '/subtitle-merge',
+    name: 'SubtitleMerge',
+    component: SubtitleMerge,
   },
 ]
 

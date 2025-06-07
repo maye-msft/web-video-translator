@@ -303,12 +303,12 @@ export function formatFileSize(bytes: number): string {
     Math.floor(Math.log(bytes) / Math.log(k)),
     sizes.length - 1
   )
-  
+
   // For bytes, don't show decimals
   if (i === 0) {
     return bytes + ' ' + sizes[i]
   }
-  
+
   const size = (bytes / Math.pow(k, i)).toFixed(2)
   return size + ' ' + sizes[i]
 }

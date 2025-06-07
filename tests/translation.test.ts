@@ -32,7 +32,7 @@ Object.defineProperty(window, 'caches', {
 describe('Translation Utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    
+
     // Reset mock implementations
     mockCaches.open.mockResolvedValue(mockCacheStorage)
     mockCaches.delete.mockResolvedValue(true)
@@ -239,8 +239,12 @@ Esta es una prueba.
     it('should get cache info successfully', async () => {
       // Mock cache responses with the correct URL patterns
       mockCacheStorage.keys.mockResolvedValue([
-        { url: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.0/dist/ort-wasm-simd.wasm' },
-        { url: 'https://huggingface.co/models/Xenova--opus-mt-en-es/resolve/main/onnx/encoder_model.onnx' },
+        {
+          url: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.0/dist/ort-wasm-simd.wasm',
+        },
+        {
+          url: 'https://huggingface.co/models/Xenova--opus-mt-en-es/resolve/main/onnx/encoder_model.onnx',
+        },
       ])
 
       mockCacheStorage.match.mockImplementation(request => {

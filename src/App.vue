@@ -43,6 +43,15 @@
               >
                 Translation Test
               </router-link>
+              <router-link
+                to="/subtitle-merge"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                :class="{
+                  'text-blue-600 bg-blue-50': $route.name === 'SubtitleMerge',
+                }"
+              >
+                Subtitle Merge
+              </router-link>
             </div>
           </div>
         </div>
