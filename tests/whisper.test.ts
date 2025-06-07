@@ -7,14 +7,19 @@ vi.mock('@xenova/transformers', () => ({
     chunks: [
       {
         text: 'Hello, this is a test',
-        timestamp: [0, 2.5]
+        timestamp: [0, 2.5] as [number, number]
       },
       {
         text: 'transcription.',
-        timestamp: [2.5, 4.0]
+        timestamp: [2.5, 4.0] as [number, number]
       }
     ]
-  }))
+  })),
+  env: {
+    allowRemoteModels: true,
+    allowLocalModels: false,
+    useBrowserCache: true
+  }
 }))
 
 // Mock browser APIs
@@ -30,7 +35,7 @@ global.FileReader = vi.fn().mockImplementation(() => ({
   onload: null,
   onerror: null,
   result: new ArrayBuffer(1024)
-}))
+})) as any
 
 // Mock DOM methods for file download
 const mockAppendChild = vi.fn()

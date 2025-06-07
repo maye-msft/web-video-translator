@@ -9,26 +9,39 @@
               Web Video Translator
             </router-link>
             <div class="flex space-x-4">
-              <router-link 
-                to="/" 
+              <router-link
+                to="/"
                 class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 :class="{ 'text-blue-600 bg-blue-50': $route.name === 'Home' }"
               >
                 Main App
               </router-link>
-              <router-link 
-                to="/ffmpeg-test" 
+              <router-link
+                to="/ffmpeg-test"
                 class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                :class="{ 'text-blue-600 bg-blue-50': $route.name === 'FFmpegTest' }"
+                :class="{
+                  'text-blue-600 bg-blue-50': $route.name === 'FFmpegTest',
+                }"
               >
                 FFmpeg Test
               </router-link>
-              <router-link 
-                to="/whisper-test" 
+              <router-link
+                to="/whisper-test"
                 class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                :class="{ 'text-blue-600 bg-blue-50': $route.name === 'WhisperTest' }"
+                :class="{
+                  'text-blue-600 bg-blue-50': $route.name === 'WhisperTest',
+                }"
               >
                 Whisper Test
+              </router-link>
+              <router-link
+                to="/translation-test"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                :class="{
+                  'text-blue-600 bg-blue-50': $route.name === 'MarianMTTest',
+                }"
+              >
+                Translation Test
               </router-link>
             </div>
           </div>

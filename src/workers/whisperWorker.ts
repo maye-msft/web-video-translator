@@ -92,14 +92,6 @@ interface CancelledResponse {
   requestId: string
 }
 
-type WorkerResponse =
-  | ProgressResponse
-  | TranscriptionProgressResponse
-  | InitializeSuccessResponse
-  | TranscribeSuccessResponse
-  | ErrorResponse
-  | CancelledResponse
-
 // Track active requests for cancellation
 const activeRequests = new Set<string>()
 
@@ -209,11 +201,11 @@ async function transcribeAudio(
 
     // Use fixed increment that guarantees visible progress
     const progressIncrement = 2 // 2% every 250ms = steady progress
-    
+
     console.log('Progress setup:', {
       audioDuration: audioDurationEstimate,
       increment: progressIncrement,
-      intervalMs: 250
+      intervalMs: 250,
     })
 
     // Create progress interval that increments gradually
@@ -355,26 +347,37 @@ async function transcribeAudio(
   } finally {
     // Always clean up the request from activeRequests at the very end
     activeRequests.delete(requestId)
-    console.log('Cleaned up request from activeRequests:', requestId, 'Remaining:', Array.from(activeRequests))
+    console.log(
+      'Cleaned up request from activeRequests:',
+      requestId,
+      'Remaining:',
+      Array.from(activeRequests)
+    )
   }
 }
 
 // Handle messages from main thread
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
-  const { type, requestId } = event.data
+  const { type } = event.data
 
   if (type === 'initialize') {
-    const { modelName } = event.data as InitializeMessage
+    const { modelName, requestId } = event.data as InitializeMessage
     activeRequests.add(requestId)
     await initializeWhisper(modelName, requestId)
     activeRequests.delete(requestId)
   } else if (type === 'transcribe') {
-    const { audioData, options } = event.data as TranscribeMessage
+    const { audioData, options, requestId } = event.data as TranscribeMessage
     activeRequests.add(requestId)
-    console.log('Added request to activeRequests:', requestId, 'Current set:', Array.from(activeRequests))
+    console.log(
+      'Added request to activeRequests:',
+      requestId,
+      'Current set:',
+      Array.from(activeRequests)
+    )
     // Start transcription - don't use finally() which might execute too early
     transcribeAudio(audioData, options, requestId)
   } else if (type === 'cancel') {
+    const { requestId } = event.data as CancelMessage
     activeRequests.delete(requestId)
     self.postMessage({
       type: 'cancelled',
