@@ -20,7 +20,8 @@
     "@ffmpeg/util": "^0.12.1",
     "@vitejs/plugin-vue": "^5.2.4",
     "@xenova/transformers": "^2.17.2",
-    "vue": "^3.5.16"
+    "vue": "^3.5.16",
+    "vue-router": "4"
   },
   "devDependencies": {
     "@anthropic-ai/claude-code": "^1.0.17",

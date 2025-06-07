@@ -143,19 +143,6 @@ const clearVideo = () => {
   isLoading.value = false
 }
 
-// Watch for video file changes
-watch(
-  () => props.videoFile,
-  (newFile) => {
-    if (newFile) {
-      loadVideo(newFile)
-    } else {
-      clearVideo()
-    }
-  },
-  { immediate: true }
-)
-
 const loadVideo = (file: File) => {
   clearVideo()
   isLoading.value = true
@@ -248,6 +235,19 @@ const formatDate = (timestamp: number): string => {
     minute: '2-digit'
   })
 }
+
+// Watch for video file changes
+watch(
+  () => props.videoFile,
+  (newFile) => {
+    if (newFile) {
+      loadVideo(newFile)
+    } else {
+      clearVideo()
+    }
+  },
+  { immediate: true }
+)
 
 // Cleanup on unmount
 onUnmounted(() => {
