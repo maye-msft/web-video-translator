@@ -13,20 +13,11 @@
     <main class="max-w-4xl mx-auto">
       <div class="grid md:grid-cols-2 gap-8">
         <!-- Video Upload Section -->
-        <section class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4">
-            1. Upload Video
-          </h2>
-          <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-            <div class="text-gray-500">
-              <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p class="text-sm">Drop your video file here or click to browse</p>
-              <p class="text-xs text-gray-400 mt-2">MP4, WebM, AVI supported</p>
-            </div>
-          </div>
-        </section>
+        <VideoUpload 
+          @file-selected="handleFileSelected"
+          @file-cleared="handleFileCleared"
+          @error="handleUploadError"
+        />
 
         <!-- Subtitle Management Section -->
         <section class="bg-white rounded-lg shadow-md p-6">
@@ -34,18 +25,30 @@
             2. Subtitle Management
           </h2>
           <div class="space-y-4">
-            <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50" disabled>
+            <button 
+              class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50" 
+              :disabled="!selectedFile"
+            >
               Extract Subtitles
             </button>
-            <button class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50" disabled>
+            <button 
+              class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50" 
+              :disabled="!selectedFile"
+            >
               Translate Subtitles
             </button>
-            <button class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50" disabled>
+            <button 
+              class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50" 
+              :disabled="!selectedFile"
+            >
               Download SRT File
             </button>
           </div>
         </section>
       </div>
+
+      <!-- Video Information Display -->
+      <VideoInfo :video-file="selectedFile" />
 
       <!-- Subtitle Editor Section -->
       <section class="bg-white rounded-lg shadow-md p-6 mt-8">
@@ -98,5 +101,27 @@
 </template>
 
 <script setup lang="ts">
-// Component logic will be added in future user stories
+import { ref } from 'vue'
+import VideoUpload from './VideoUpload.vue'
+import VideoInfo from './VideoInfo.vue'
+
+// State
+const selectedFile = ref<File | null>(null)
+const uploadError = ref('')
+
+// Event handlers
+const handleFileSelected = (file: File) => {
+  selectedFile.value = file
+  uploadError.value = ''
+}
+
+const handleFileCleared = () => {
+  selectedFile.value = null
+  uploadError.value = ''
+}
+
+const handleUploadError = (error: string) => {
+  uploadError.value = error
+  selectedFile.value = null
+}
 </script>
