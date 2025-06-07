@@ -23,6 +23,13 @@
               >
                 FFmpeg Test
               </router-link>
+              <router-link 
+                to="/whisper-test" 
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                :class="{ 'text-blue-600 bg-blue-50': $route.name === 'WhisperTest' }"
+              >
+                Whisper Test
+              </router-link>
             </div>
           </div>
         </div>
