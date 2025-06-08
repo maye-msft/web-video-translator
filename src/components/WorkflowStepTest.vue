@@ -148,6 +148,41 @@
         </div>
       </div>
 
+      <!-- Model Selection -->
+      <div v-if="hasAudioSource" class="mb-8">
+        <h2 class="text-lg font-semibold mb-4">Choose Whisper Model</h2>
+        <div class="max-w-md">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Select Whisper Model
+          </label>
+          <select
+            v-model="selectedModel"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+          >
+            <option
+              v-for="model in whisperModels"
+              :key="model.name"
+              :value="model.name"
+            >
+              {{ model.displayName }} ({{ model.size }})
+            </option>
+          </select>
+
+          <!-- Selected Model Description -->
+          <div v-if="selectedModelInfo" class="mt-3 p-3 bg-gray-50 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-900 mb-1">
+              {{ selectedModelInfo.displayName }}
+            </h4>
+            <p class="text-sm text-gray-600 mb-2">
+              {{ selectedModelInfo.description }}
+            </p>
+            <p class="text-xs text-gray-500">
+              Model Size: {{ selectedModelInfo.size }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-green-100 p-4 rounded mb-4">
         <p>If you can see this, the page loaded successfully!</p>
         <p>Current time: {{ new Date().toISOString() }}</p>
