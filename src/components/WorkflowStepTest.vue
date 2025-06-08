@@ -345,6 +345,99 @@
           </div>
         </div>
       </div>
+
+      <!-- Transcription Results -->
+      <div v-if="transcriptionSRT" class="mb-8">
+        <h2 class="text-lg font-semibold mb-4">Transcription Results</h2>
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <svg
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-green-600 mr-2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span class="text-sm font-medium text-green-800">
+                Transcription complete
+              </span>
+            </div>
+            <button
+              @click="downloadTranscriptionSRT"
+              class="text-sm text-blue-600 hover:text-blue-700 underline"
+            >
+              Download SRT
+            </button>
+          </div>
+        </div>
+
+        <!-- Subtitle Editor -->
+        <div class="border rounded-lg">
+          <div class="p-4 border-b bg-gray-50">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-700">Edit Subtitles (SRT)</span>
+              <span class="text-xs text-gray-500">Word count: {{ getWordCount() }}</span>
+            </div>
+          </div>
+          <div class="relative">
+            <textarea
+              ref="srtEditor"
+              v-model="transcriptionSRT"
+              @input="handleSRTEdit"
+              @keydown="handleEditorKeydown"
+              rows="12"
+              class="w-full p-4 text-sm border-0 rounded-b-lg focus:ring-2 focus:ring-blue-500 bg-white font-mono resize-y"
+              spellcheck="true"
+            ></textarea>
+
+            <!-- Auto-save indicator -->
+            <div
+              v-if="isAutoSaving"
+              class="absolute top-2 right-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded"
+            >
+              Saving...
+            </div>
+            <div
+              v-else-if="lastSaved"
+              class="absolute top-2 right-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded"
+            >
+              Saved {{ getTimeAgo(lastSaved) }}
+            </div>
+          </div>
+
+          <!-- Validation messages -->
+          <div
+            v-if="validationErrors.length > 0"
+            class="p-4 border-t bg-red-50"
+          >
+            <h4 class="text-sm font-medium text-red-800 mb-2">
+              Validation Errors
+            </h4>
+            <ul class="text-xs text-red-700 space-y-1">
+              <li v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</li>
+            </ul>
+          </div>
+
+          <!-- Editor help -->
+          <div class="p-4 border-t bg-blue-50">
+            <details class="text-sm">
+              <summary class="cursor-pointer">SRT Editing Tips</summary>
+              <ul class="list-disc ml-5 mt-2">
+                <li>Each subtitle block should have a number, time range, and text.</li>
+                <li>Use the format: <code>00:00:00,000 --> 00:00:05,000</code></li>
+                <li>Separate blocks with a blank line.</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </div>
       <!-- ...existing code... -->
     </div>
   </div>
@@ -367,182 +460,4 @@ import type { SubtitleSegment } from '@/utils/translation'
 import { formatFileSize } from '@/utils/translation'
 
 console.log('WorkflowStepTest with dynamic service import loaded at:', new Date().toISOString())
-console.log('Whisper models available:', WHISPER_MODELS.length)
-
-// Helper function to get whisper service dynamically
-async function getWhisperService() {
-  const { whisperService } = await import('@/services/whisperService')
-  return whisperService
-}
-
-const router = useRouter()
-const { workflowState, updateArtifacts, setProcessing, completeStep } = useWorkflowState()
-
-// Test all state variables from WorkflowStep2
-const showHelp = ref<boolean>(false)
-const audioSource = ref<string>('upload')
-const srtEditor = ref<HTMLTextAreaElement>()
-const isAutoSaving = ref<boolean>(false)
-const lastSaved = ref<Date | null>(null)
-const validationErrors = ref<string[]>([])
-const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
-const uploadedAudioFile = ref<File | null>(null)
-const audioURL = ref<string>('')
-const selectedModel = ref<string>(WHISPER_MODELS[0].name)
-const transcriptionSRT = ref<string>('')
-const transcriptionSegments = ref<any[]>([])
-const progressItems = ref<any[]>([])
-const isModelLoading = ref<boolean>(false)
-const modelLoadProgress = ref<number>(0)
-const isAudioProcessing = ref<boolean>(false)
-const audioProcessingProgress = ref<number>(0)
-const isTranscribing = ref<boolean>(false)
-const transcriptionProgress = ref<number>(0)
-const transcriptionStatus = ref<string>('')
-const transcriptionStage = ref<string>('preparing')
-const transcriptionError = ref<string>('')
-const chunkInfo = ref<any | null>(null)
-
-const hasExtractedAudio = computed(
-  () => workflowState.artifacts.extractedAudio !== null
-)
-const hasAudioSource = computed(
-  () => hasExtractedAudio.value || uploadedAudioFile.value !== null
-)
-const whisperModels = computed(() => WHISPER_MODELS)
-
-const getSelectedModelName = computed(() => {
-  const model = WHISPER_MODELS.find(m => m.name === selectedModel.value)
-  return model?.displayName || selectedModel.value
-})
-
-const selectedModelInfo = computed(() => {
-  return WHISPER_MODELS.find(m => m.name === selectedModel.value)
-})
-
-const getTranscribeButtonText = computed(() => {
-  if (isModelLoading.value) return 'Loading Model...'
-  if (isTranscribing.value) return 'Generating Subtitles...'
-  // Always show download text since we can't easily check model state synchronously
-  return `Download ${getSelectedModelName.value} & Generate Subtitles`
-})
-
-const testValue = ref('All computed properties added - button: ' + getTranscribeButtonText.value)
-
-// Handler functions for AudioUpload
-function handleAudioSelected(file: File) {
-  uploadedAudioFile.value = file
-  console.log('Audio file selected:', file.name)
-}
-
-function handleAudioCleared() {
-  uploadedAudioFile.value = null
-  console.log('Audio file cleared')
-}
-
-// Test Case 9: Add all remaining functions from WorkflowStep2
-function createAudioURL() {
-  console.log('createAudioURL called')
-}
-
-function handleSRTEdit() {
-  console.log('handleSRTEdit called')
-}
-
-function autoSaveSRT() {
-  console.log('autoSaveSRT called')
-}
-
-function handleEditorKeydown(event: KeyboardEvent) {
-  console.log('handleEditorKeydown called')
-}
-
-function getWordCount(): number {
-  return 0
-}
-
-function getTimeAgo(date: Date): string {
-  return 'now'
-}
-
-function validateSRT() {
-  console.log('validateSRT called')
-}
-
-function formatSRT() {
-  console.log('formatSRT called')
-}
-
-function downloadTranscriptionSRT() {
-  console.log('downloadTranscriptionSRT called')
-}
-
-function formatTimestamp(seconds: number): string {
-  return '00:00:00,000'
-}
-
-function getTranscriptionStageText(): string {
-  return 'test stage'
-}
-
-function formatProgressItemName(file: string): string {
-  return file
-}
-
-function goToStep3() {
-  console.log('goToStep3 called')
-}
-
-function parseSRTToSegments(srtContent: string) {
-  return []
-}
-
-function parseTimestamp(timestamp: string): number {
-  return 0
-}
-
-function startTranscriptionWithAutoInit() {
-  console.log('startTranscriptionWithAutoInit called')
-}
-
-function initializeWhisperModel() {
-  console.log('initializeWhisperModel called')
-}
-
-function startTranscription() {
-  console.log('startTranscription called')
-}
-
-// Test Case 10: Add onMounted lifecycle hook
-onMounted(() => {
-  console.log('WorkflowStepTest onMounted called')
-  
-  // Initialize from workflow state (in case we navigated back to this step)
-  if (workflowState.artifacts.audioFile) {
-    uploadedAudioFile.value = workflowState.artifacts.audioFile
-  }
-  if (workflowState.artifacts.selectedWhisperModel) {
-    selectedModel.value = workflowState.artifacts.selectedWhisperModel
-  }
-  if (workflowState.artifacts.transcriptionSRT) {
-    transcriptionSRT.value = workflowState.artifacts.transcriptionSRT
-  }
-  if (workflowState.artifacts.transcriptionSegments) {
-    transcriptionSegments.value =
-      workflowState.artifacts.transcriptionSegments.map(s => ({
-        ...s,
-        timestamp: [s.timestamp[0], s.timestamp[1]] as [number, number],
-      }))
-  }
-
-  createAudioURL()
-})
-
-// Test Case 11: Add onUnmounted lifecycle hook
-onUnmounted(() => {
-  console.log('WorkflowStepTest onUnmounted called')
-  if (audioURL.value) {
-    URL.revokeObjectURL(audioURL.value)
-  }
-})
-</script>
+console.log('Whisper modes
