@@ -622,13 +622,23 @@ onUnmounted(() => {
 })
 
 // Watch for changes to update workflow state
+// Fix: Only update artifacts if values have changed to prevent infinite watcher loop
 watch([selectedModel, transcriptionSRT, transcriptionSegments], () => {
-  updateArtifacts({
-    selectedWhisperModel: selectedModel.value,
-    transcriptionSRT: transcriptionSRT.value,
-    transcriptionSegments: transcriptionSegments.value,
-    originalSRT: transcriptionSRT.value, // Also set as original for translation
-  })
+  const artifacts = workflowState.artifacts
+  const needsUpdate =
+    artifacts.selectedWhisperModel !== selectedModel.value ||
+    artifacts.transcriptionSRT !== transcriptionSRT.value ||
+    JSON.stringify(artifacts.transcriptionSegments) !== JSON.stringify(transcriptionSegments.value) ||
+    artifacts.originalSRT !== transcriptionSRT.value
+
+  if (needsUpdate) {
+    updateArtifacts({
+      selectedWhisperModel: selectedModel.value,
+      transcriptionSRT: transcriptionSRT.value,
+      transcriptionSegments: transcriptionSegments.value,
+      originalSRT: transcriptionSRT.value, // Also set as original for translation
+    })
+  }
 
   // Check if step is complete
   if (transcriptionSRT.value !== '') {
