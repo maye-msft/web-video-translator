@@ -2,6 +2,10 @@
 
 A web-based application for video subtitle extraction, translation, and merging using WebAssembly and transformer.js models.
 
+## 🚀 Live Demo
+
+**[Try the Application](https://maye-msft.github.io/web-video-translator/)**
+
 ## Features
 
 - Extract subtitles from video files
