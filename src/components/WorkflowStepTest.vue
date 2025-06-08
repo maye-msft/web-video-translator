@@ -10,12 +10,19 @@
       <div class="bg-green-100 p-4 rounded">
         <p>If you can see this, the page loaded successfully!</p>
         <p>Current time: {{ new Date().toISOString() }}</p>
+        <p>Test Value: {{ testValue }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// Minimal script with no imports to test basic page loading
-console.log('WorkflowStepTest loaded at:', new Date().toISOString())
+// Test Case 1: Add Vue imports first
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+
+console.log('WorkflowStepTest with Vue imports loaded at:', new Date().toISOString())
+
+const router = useRouter()
+const testValue = ref('Vue imports working')
 </script>
