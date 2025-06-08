@@ -42,12 +42,17 @@ export class WhisperWorkerService {
   private currentModelName: string | null = null
   private modelLoaded = false
   private currentTranscriptionId: string | null = null
+  private workerInitialized = false
 
   constructor() {
-    this.initializeWorker()
+    // Don't initialize worker automatically - wait for first use
   }
 
   private initializeWorker() {
+    if (this.workerInitialized) {
+      return
+    }
+
     try {
       // Check if Web Workers are supported
       if (typeof Worker === 'undefined') {
@@ -57,6 +62,8 @@ export class WhisperWorkerService {
         return
       }
 
+      console.log('🔧 Initializing Whisper worker for the first time...')
+      
       // Create worker from the TypeScript file
       this.worker = new Worker(
         new URL('../workers/whisperWorker.ts', import.meta.url),
@@ -137,8 +144,12 @@ export class WhisperWorkerService {
         })
         this.pendingRequests.clear()
       }
+      
+      this.workerInitialized = true
+      console.log('✅ Whisper worker initialized successfully')
     } catch (error) {
       console.error('Failed to initialize worker:', error)
+      this.workerInitialized = false
     }
   }
 
@@ -152,6 +163,9 @@ export class WhisperWorkerService {
     onProgress?: ModelProgressCallback,
     onProgressItems?: ProgressItemsCallback
   ): Promise<string> {
+    // Initialize worker lazily on first use
+    this.initializeWorker()
+    
     if (!this.worker) {
       throw new Error('Worker not available')
     }
@@ -195,6 +209,9 @@ export class WhisperWorkerService {
     onStageChange?: StageChangeCallback,
     onChunkProgress?: ChunkProgressCallback
   ): Promise<TranscriptionResult> {
+    // Initialize worker lazily on first use
+    this.initializeWorker()
+    
     if (!this.worker) {
       throw new Error('Worker not available')
     }
@@ -233,7 +250,7 @@ export class WhisperWorkerService {
   }
 
   cancelOperation(operationId?: string) {
-    if (!this.worker) return
+    if (!this.workerInitialized || !this.worker) return
 
     if (operationId) {
       // Cancel specific operation
@@ -253,7 +270,8 @@ export class WhisperWorkerService {
   }
 
   isModelLoaded(): boolean {
-    return this.modelLoaded
+    // Only return true if both worker is initialized AND model is loaded
+    return this.workerInitialized && this.modelLoaded
   }
 
   getCurrentModelName(): string | null {
@@ -269,6 +287,7 @@ export class WhisperWorkerService {
     this.pendingRequests.clear()
     this.modelLoaded = false
     this.currentModelName = null
+    this.workerInitialized = false
   }
 
   // Get current transcription request ID for cancellation

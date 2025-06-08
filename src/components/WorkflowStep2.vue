@@ -593,7 +593,7 @@ const getTranscribeButtonText = computed(() => {
   ) {
     return 'Generate Subtitles'
   }
-  return `Load ${getSelectedModelName.value} & Generate Subtitles`
+  return `Download ${getSelectedModelName.value} & Generate Subtitles`
 })
 
 // Setup audio URL on mount
