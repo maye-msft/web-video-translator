@@ -757,10 +757,10 @@ watch(
 watch(
   [hasWorkflowVideo, hasWorkflowSubtitles],
   () => {
-    if (hasWorkflowVideo.value && videoSource.value === 'upload') {
+    if (hasWorkflowVideo.value && videoSource.value === 'upload' && !uploadedVideoFile.value) {
       videoSource.value = 'workflow'
     }
-    if (hasWorkflowSubtitles.value && subtitleSource.value === 'upload') {
+    if (hasWorkflowSubtitles.value && subtitleSource.value === 'upload' && uploadedSRTPreview.value === '') {
       subtitleSource.value = 'workflow'
     }
   },
@@ -848,6 +848,10 @@ async function initializeFFmpeg() {
 }
 
 async function generatePreview() {
+  if (!isFFmpegReady.value) {
+    await initializeFFmpeg()
+    if (!isFFmpegReady.value) return
+  }
   if (
     !workflowState.artifacts.videoFile ||
     !workflowState.artifacts.translatedSRT
