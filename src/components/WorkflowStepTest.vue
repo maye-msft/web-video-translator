@@ -593,25 +593,7 @@ const getTranscribeButtonText = computed(() => {
 
 // Setup audio URL on mount
 onMounted(() => {
-  // Initialize from workflow state (in case we navigated back to this step)
-  if (workflowState.artifacts.audioFile) {
-    uploadedAudioFile.value = workflowState.artifacts.audioFile
-  }
-  if (workflowState.artifacts.selectedWhisperModel) {
-    selectedModel.value = workflowState.artifacts.selectedWhisperModel
-  }
-  if (workflowState.artifacts.transcriptionSRT) {
-    transcriptionSRT.value = workflowState.artifacts.transcriptionSRT
-  }
-  if (workflowState.artifacts.transcriptionSegments) {
-    transcriptionSegments.value =
-      workflowState.artifacts.transcriptionSegments.map(s => ({
-        ...s,
-        timestamp: [s.timestamp[0], s.timestamp[1]] as [number, number],
-      }))
-  }
 
-  createAudioURL()
 })
 
 // Cleanup on unmount
@@ -622,13 +604,23 @@ onUnmounted(() => {
 })
 
 // Watch for changes to update workflow state
+// Fix: Only update artifacts if values have changed to prevent infinite watcher loop
 watch([selectedModel, transcriptionSRT, transcriptionSegments], () => {
-  updateArtifacts({
-    selectedWhisperModel: selectedModel.value,
-    transcriptionSRT: transcriptionSRT.value,
-    transcriptionSegments: transcriptionSegments.value,
-    originalSRT: transcriptionSRT.value, // Also set as original for translation
-  })
+  const artifacts = workflowState.artifacts
+  const needsUpdate =
+    artifacts.selectedWhisperModel !== selectedModel.value ||
+    artifacts.transcriptionSRT !== transcriptionSRT.value ||
+    JSON.stringify(artifacts.transcriptionSegments) !== JSON.stringify(transcriptionSegments.value) ||
+    artifacts.originalSRT !== transcriptionSRT.value
+
+  if (needsUpdate) {
+    updateArtifacts({
+      selectedWhisperModel: selectedModel.value,
+      transcriptionSRT: transcriptionSRT.value,
+      transcriptionSegments: transcriptionSegments.value,
+      originalSRT: transcriptionSRT.value, // Also set as original for translation
+    })
+  }
 
   // Check if step is complete
   if (transcriptionSRT.value !== '') {
