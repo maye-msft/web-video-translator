@@ -535,7 +535,13 @@ import {
   type TranscriptionResult,
   type CacheInfo,
 } from '../utils/whisper'
-import { whisperService } from '../services/whisperService'
+// Dynamic import of whisperService to prevent auto-loading
+
+// Helper function to get whisper service dynamically
+async function getWhisperService() {
+  const { whisperService } = await import('../services/whisperService')
+  return whisperService
+}
 
 // State
 const selectedAudio = ref<File | null>(null)
