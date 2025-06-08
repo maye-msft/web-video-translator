@@ -20,10 +20,14 @@ export class TranslationWorkerService {
   private currentTranslationId: string | null = null
 
   constructor() {
-    this.initializeWorker()
+    // Don't initialize worker automatically - wait for first use
   }
 
-  private initializeWorker() {
+  private async initializeWorker() {
+    if (this.worker) {
+      return
+    }
+
     try {
       // Check if Web Workers are supported
       if (typeof Worker === 'undefined') {
@@ -33,11 +37,11 @@ export class TranslationWorkerService {
         return
       }
 
-      // Create worker from the TypeScript file
-      this.worker = new Worker(
-        new URL('../workers/translationWorker.ts', import.meta.url),
-        { type: 'module' }
-      )
+      console.log('🔧 Initializing Translation worker for the first time...')
+      
+      // Use dynamic import to load worker module
+      const workerUrl = (await import('../workers/translationWorker.ts?worker&url')).default
+      this.worker = new Worker(workerUrl, { type: 'module' })
 
       this.worker.onmessage = event => {
         const { type, requestId, ...data } = event.data
@@ -105,6 +109,8 @@ export class TranslationWorkerService {
     modelId: string,
     onProgress?: TranslationProgressCallback
   ): Promise<string> {
+    await this.initializeWorker()
+    
     if (!this.worker) {
       throw new Error('Worker not available')
     }
@@ -141,6 +147,8 @@ export class TranslationWorkerService {
     } = {},
     onProgress?: TranslationProgressCallback
   ): Promise<TranslationResult> {
+    await this.initializeWorker()
+    
     if (!this.worker) {
       throw new Error('Worker not available')
     }

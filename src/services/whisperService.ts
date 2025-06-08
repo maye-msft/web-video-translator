@@ -48,7 +48,7 @@ export class WhisperWorkerService {
     // Don't initialize worker automatically - wait for first use
   }
 
-  private initializeWorker() {
+  private async initializeWorker() {
     if (this.workerInitialized) {
       return
     }
@@ -64,11 +64,9 @@ export class WhisperWorkerService {
 
       console.log('🔧 Initializing Whisper worker for the first time...')
       
-      // Create worker from the TypeScript file
-      this.worker = new Worker(
-        new URL('../workers/whisperWorker.ts', import.meta.url),
-        { type: 'module' }
-      )
+      // Use dynamic import to load worker module
+      const workerUrl = (await import('../workers/whisperWorker.ts?worker&url')).default
+      this.worker = new Worker(workerUrl, { type: 'module' })
 
       this.worker.onmessage = event => {
         const { type, requestId, ...data } = event.data
@@ -164,7 +162,7 @@ export class WhisperWorkerService {
     onProgressItems?: ProgressItemsCallback
   ): Promise<string> {
     // Initialize worker lazily on first use
-    this.initializeWorker()
+    await this.initializeWorker()
     
     if (!this.worker) {
       throw new Error('Worker not available')
@@ -210,7 +208,7 @@ export class WhisperWorkerService {
     onChunkProgress?: ChunkProgressCallback
   ): Promise<TranscriptionResult> {
     // Initialize worker lazily on first use
-    this.initializeWorker()
+    await this.initializeWorker()
     
     if (!this.worker) {
       throw new Error('Worker not available')
