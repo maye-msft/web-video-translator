@@ -199,6 +199,153 @@
           :initial-file="uploadedAudioFile"
         />
       </div>
+
+      <!-- Transcription Section -->
+      <div v-if="hasAudioSource && selectedModel" class="mb-8">
+        <h2 class="text-lg font-semibold mb-4">Generate Transcription</h2>
+        <div class="bg-gray-50 rounded-lg p-6">
+          <!-- Generate Subtitles Button (with automatic model initialization) -->
+          <button
+            @click="startTranscriptionWithAutoInit"
+            :disabled="isTranscribing || isModelLoading"
+            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+          >
+            {{ getTranscribeButtonText }}
+          </button>
+
+          <!-- Multi-Stage Progress System (inspired by whisper-web) -->
+
+          <!-- Model Loading Progress Items -->
+          <div
+            v-if="progressItems.length > 0"
+            class="mb-4 space-y-2"
+            data-testid="progress-items"
+          >
+            <div class="text-sm font-medium text-gray-700 mb-2">
+              Loading model files... (only runs once)
+            </div>
+            <div
+              v-for="item in progressItems"
+              :key="item.file"
+              class="bg-blue-50 rounded-lg p-3"
+            >
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-blue-800">{{ item.name || item.file }}</span>
+                <span class="text-blue-600"
+                  >{{ Math.round(item.progress) }}%</span
+                >
+              </div>
+              <div class="w-full bg-blue-200 rounded-full h-2">
+                <div
+                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: item.progress + '%' }"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audio Processing Progress -->
+          <div
+            v-if="isAudioProcessing"
+            class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+            data-testid="audio-processing"
+          >
+            <div class="flex justify-between text-sm font-medium mb-2">
+              <span class="text-yellow-800">Processing audio file...</span>
+              <span class="text-yellow-600"
+                >{{ audioProcessingProgress }}%</span
+              >
+            </div>
+            <div class="w-full bg-yellow-200 rounded-full h-3">
+              <div
+                class="bg-yellow-600 h-3 rounded-full transition-all duration-300"
+                :style="{ width: audioProcessingProgress + '%' }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Transcription Progress -->
+          <div
+            v-if="isTranscribing"
+            class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+            data-testid="transcription-progress"
+          >
+            <div class="flex justify-between text-sm font-medium mb-2">
+              <span class="text-green-800">{{ transcriptionStatus }}</span>
+              <span class="text-green-600">{{ transcriptionProgress }}%</span>
+            </div>
+
+            <!-- Main Progress Bar -->
+            <div class="w-full bg-green-200 rounded-full h-4 shadow-inner mb-3">
+              <div
+                class="bg-green-600 h-4 rounded-full transition-all duration-500 shadow-sm"
+                :style="{ width: transcriptionProgress + '%' }"
+              ></div>
+            </div>
+
+            <!-- Chunk Progress Details -->
+            <div v-if="chunkInfo" class="space-y-2">
+              <div class="flex justify-between text-xs text-green-700">
+                <span>Processing chunks:</span>
+                <span
+                  >{{ chunkInfo.currentChunk }} /
+                  {{ chunkInfo.totalChunks }}</span
+                >
+              </div>
+
+              <!-- Individual Chunk Progress -->
+              <div class="w-full bg-green-100 rounded-full h-2">
+                <div
+                  class="bg-green-500 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: chunkInfo.chunkProgress + '%' }"
+                ></div>
+              </div>
+
+              <!-- Current Chunk Text Preview -->
+              <div
+                v-if="chunkInfo.chunkText"
+                class="text-xs text-green-600 italic truncate"
+              >
+                Current: "{{ chunkInfo.chunkText.slice(0, 60)
+                }}{{ chunkInfo.chunkText.length > 60 ? '...' : '' }}"
+              </div>
+            </div>
+
+            <div class="text-xs text-green-700 mt-2">
+              {{ getTranscriptionStageText() }}
+            </div>
+          </div>
+
+          <!-- Error Display -->
+          <div
+            v-if="transcriptionError"
+            class="mb-4 bg-red-50 border border-red-200 rounded-md p-3"
+          >
+            <div class="flex">
+              <svg
+                class="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">
+                  Transcription Error
+                </h3>
+                <p class="mt-1 text-sm text-red-700">
+                  {{ transcriptionError }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ...existing code... -->
     </div>
   </div>
 </template>
