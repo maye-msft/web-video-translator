@@ -17,12 +17,14 @@
 </template>
 
 <script setup lang="ts">
-// Test Case 1: Add Vue imports first
+// Test Case 2: Add workflow state
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { useWorkflowState } from '@/composables/useWorkflowState'
 
-console.log('WorkflowStepTest with Vue imports loaded at:', new Date().toISOString())
+console.log('WorkflowStepTest with workflow state loaded at:', new Date().toISOString())
 
 const router = useRouter()
-const testValue = ref('Vue imports working')
+const { workflowState, updateArtifacts, setProcessing, completeStep } = useWorkflowState()
+const testValue = ref('Workflow state imports working')
 </script>
