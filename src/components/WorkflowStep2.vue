@@ -498,7 +498,7 @@ import {
   downloadSRT,
   preprocessAudio,
 } from '@/utils/whisper'
-import { whisperService } from '@/services/whisperService'
+// Dynamic import of whisperService to prevent auto-loading
 import type { SubtitleSegment } from '@/utils/translation'
 import { formatFileSize } from '@/utils/translation'
 import { useRouter } from 'vue-router'
@@ -587,12 +587,7 @@ const selectedModelInfo = computed(() => {
 const getTranscribeButtonText = computed(() => {
   if (isModelLoading.value) return 'Loading Model...'
   if (isTranscribing.value) return 'Generating Subtitles...'
-  if (
-    whisperService.isModelLoaded() &&
-    whisperService.getCurrentModelName() === selectedModel.value
-  ) {
-    return 'Generate Subtitles'
-  }
+  // Always show download text since we can't easily check model state synchronously
   return `Download ${getSelectedModelName.value} & Generate Subtitles`
 })
 
@@ -689,6 +684,12 @@ watch(audioSource, newSource => {
   }
 })
 
+// Helper function to get whisper service dynamically
+async function getWhisperService() {
+  const { whisperService } = await import('@/services/whisperService')
+  return whisperService
+}
+
 // Methods
 function createAudioURL() {
   if (audioURL.value) {
@@ -738,6 +739,7 @@ async function startTranscriptionWithAutoInit() {
 
   try {
     // Initialize model if not ready
+    const whisperService = await getWhisperService()
     if (
       !whisperService.isModelLoaded() ||
       whisperService.getCurrentModelName() !== selectedModel.value
@@ -761,6 +763,7 @@ async function initializeWhisperModel() {
     modelLoadProgress.value = 0
     transcriptionStatus.value = `Loading ${getSelectedModelName.value} model...`
 
+    const whisperService = await getWhisperService()
     await whisperService.initializeWhisper(
       selectedModel.value,
       (progress: any) => {
@@ -922,6 +925,7 @@ async function startTranscription() {
 
     try {
       // Start transcription using whisper service
+      const whisperService = await getWhisperService()
       const result = await whisperService.transcribeAudio(
         audioData,
         {

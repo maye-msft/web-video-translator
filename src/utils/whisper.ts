@@ -1,11 +1,5 @@
-import { pipeline, AutomaticSpeechRecognitionPipeline, env } from '@xenova/transformers'
-
-// Configure Transformer.js to use remote models
-env.allowRemoteModels = true
-env.allowLocalModels = false
-env.useBrowserCache = true
-env.remoteHost = 'https://huggingface.co'
-env.remotePathTemplate = '{model}/resolve/main/'
+// Dynamic imports to prevent automatic loading
+// Note: pipeline, AutomaticSpeechRecognitionPipeline, and env are imported dynamically when needed
 
 // Whisper model configuration
 export interface WhisperModelConfig {
@@ -84,8 +78,8 @@ export class TranscriptionCancellation {
   }
 }
 
-// Whisper pipeline instance
-let whisperPipeline: AutomaticSpeechRecognitionPipeline | null = null
+// Whisper pipeline instance (using dynamic imports)
+let whisperPipeline: any | null = null
 let currentModelName: string | null = null
 
 // Cache management
@@ -120,7 +114,7 @@ export interface SRTEntry {
 export async function initializeWhisper(
   modelName: string = 'Xenova/whisper-small',
   onProgress?: ModelProgressCallback
-): Promise<AutomaticSpeechRecognitionPipeline> {
+): Promise<any> {
   if (whisperPipeline && currentModelName === modelName) {
     return whisperPipeline
   }
@@ -131,6 +125,16 @@ export async function initializeWhisper(
       whisperPipeline = null
       currentModelName = null
     }
+
+    // Dynamic import to prevent auto-loading
+    const { pipeline, env } = await import('@xenova/transformers')
+    
+    // Configure Transformer.js to use remote models
+    env.allowRemoteModels = true
+    env.allowLocalModels = false
+    env.useBrowserCache = true
+    env.remoteHost = 'https://huggingface.co'
+    env.remotePathTemplate = '{model}/resolve/main/'
 
     // Set up progress tracking
     let progressCallback: any
