@@ -1,10 +1,17 @@
 # Web Video Translator
 
+[![CI](https://github.com/maye-msft/web-video-translator/actions/workflows/test.yml/badge.svg)](https://github.com/maye-msft/web-video-translator/actions/workflows/test.yml)
+[![GitHub Pages](https://github.com/maye-msft/web-video-translator/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/maye-msft/web-video-translator/actions/workflows/pages/pages-build-deployment)
+[![MIT License](https://img.shields.io/github/license/maye-msft/web-video-translator)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/maye-msft/web-video-translator)](https://github.com/maye-msft/web-video-translator/commits/main)
+
 A web-based application for video subtitle extraction, translation, and merging using WebAssembly and transformer.js models.
 
 ## 🚀 Live Demo
 
 **[Try the Application](https://maye-msft.github.io/web-video-translator/)**
+
+[GitHub Repository](https://github.com/maye-msft/web-video-translator)
 
 ## Features
 

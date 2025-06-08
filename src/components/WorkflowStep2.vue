@@ -525,7 +525,7 @@ const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
 const uploadedAudioFile = ref<File | null>(workflowState.artifacts.audioFile)
 const audioURL = ref<string>('')
 const selectedModel = ref<string>(
-  workflowState.artifacts.selectedWhisperModel || WHISPER_MODELS[0].name
+  workflowState.artifacts.selectedWhisperModel || ''
 )
 const transcriptionSRT = ref<string>(
   workflowState.artifacts.transcriptionSRT || ''
@@ -587,6 +587,7 @@ const selectedModelInfo = computed(() => {
 const getTranscribeButtonText = computed(() => {
   if (isModelLoading.value) return 'Loading Model...'
   if (isTranscribing.value) return 'Generating Subtitles...'
+  if (!selectedModel.value) return 'Load Whisper Model'
   // Always show download text since we can't easily check model state synchronously
   return `Download ${getSelectedModelName.value} & Generate Subtitles`
 })
