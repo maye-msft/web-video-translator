@@ -460,4 +460,198 @@ import type { SubtitleSegment } from '@/utils/translation'
 import { formatFileSize } from '@/utils/translation'
 
 console.log('WorkflowStepTest with dynamic service import loaded at:', new Date().toISOString())
-console.log('Whisper modes
+console.log('Whisper models:', WHISPER_MODELS)
+
+// State and refs
+const router = useRouter()
+const { workflowState, setWorkflowState } = useWorkflowState()
+
+const showHelp = ref(false)
+const audioSource = ref('step1')
+const selectedModel = ref('tiny')
+const uploadedAudioFile = ref<File | null>(null)
+const isTranscribing = ref(false)
+const isModelLoading = ref(false)
+const transcriptionProgress = ref(0)
+const audioProcessingProgress = ref(0)
+const transcriptionStatus = ref('Idle')
+const transcriptionError = ref<string | null>(null)
+const isAutoSaving = ref(false)
+const lastSaved = ref<Date | null>(null)
+const validationErrors = ref<string[]>([])
+
+// Computed properties
+const hasExtractedAudio = computed(() => {
+  return workflowState.artifacts.extractedAudio !== null
+})
+const hasAudioSource = computed(() => {
+  return audioSource.value === 'step1' ? hasExtractedAudio.value : !!uploadedAudioFile.value
+})
+const selectedModelInfo = computed(() => {
+  return WHISPER_MODELS.find(model => model.name === selectedModel.value)
+})
+const getTranscribeButtonText = computed(() => {
+  if (isTranscribing.value) return 'Transcribing...'
+  if (isModelLoading.value) return 'Loading model...'
+  return 'Generate Transcription'
+})
+
+// Watchers
+watch(audioSource, (newSource) => {
+  if (newSource === 'step1' && !hasExtractedAudio.value) {
+    audioSource.value = 'upload'
+  }
+})
+
+watch(transcriptionProgress, (newProgress) => {
+  if (newProgress === 100) {
+    transcriptionStatus.value = 'Transcription complete'
+  }
+})
+
+// Methods
+const startTranscriptionWithAutoInit = async () => {
+  if (isTranscribing.value || isModelLoading.value) return
+
+  transcriptionError.value = null
+  transcriptionProgress.value = 0
+  transcriptionStatus.value = 'Initializing...'
+
+  // Load model if not already loaded
+  if (!selectedModelInfo.value.isLoaded) {
+    isModelLoading.value = true
+    await loadModel(selectedModelInfo.value)
+    isModelLoading.value = false
+  }
+
+  // Process audio and generate transcription
+  isTranscribing.value = true
+  const audioFile = audioSource.value === 'step1'
+    ? workflowState.artifacts.extractedAudio
+    : uploadedAudioFile.value
+
+  if (audioFile) {
+    await transcribeAudioFile(audioFile)
+  } else {
+    transcriptionError.value = 'No audio file found'
+    isTranscribing.value = false
+  }
+}
+
+const loadModel = async (model) => {
+  // Simulate model loading
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      model.isLoaded = true
+      resolve(null)
+    }, 2000)
+  })
+}
+
+const transcribeAudioFile = async (file) => {
+  // Simulate audio file processing
+  const totalChunks = 5
+  for (let i = 0; i < totalChunks; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    transcriptionProgress.value = ((i + 1) / totalChunks) * 100
+    chunkInfo.value = {
+      currentChunk: i + 1,
+      totalChunks,
+      chunkProgress: ((i + 1) / totalChunks) * 100,
+      chunkText: `Transcribed text for chunk ${i + 1}`
+    }
+  }
+  transcriptionProgress.value = 100
+  isTranscribing.value = false
+}
+
+// File handling
+const handleAudioSelected = (file: File) => {
+  uploadedAudioFile.value = file
+  audioSource.value = 'upload'
+}
+
+const handleAudioCleared = () => {
+  uploadedAudioFile.value = null
+  audioSource.value = 'step1'
+}
+
+// SRT Editing
+const transcriptionSRT = ref('')
+const chunkInfo = ref(null)
+
+const handleSRTEdit = () => {
+  const srt = transcriptionSRT.value
+  // Basic validation: check for empty lines
+  validationErrors.value = []
+  if (srt.trim() === '') {
+    validationErrors.value.push('SRT content cannot be empty')
+  } else {
+    const lines = srt.split('\n')
+    if (lines.length < 3) {
+      validationErrors.value.push('SRT content is too short')
+    }
+  }
+  // Auto-save logic
+  isAutoSaving.value = true
+  lastSaved.value = new Date()
+  setTimeout(() => {
+    isAutoSaving.value = false
+  }, 1000)
+}
+
+const handleEditorKeydown = (event: KeyboardEvent) => {
+  // Ctrl + S to save
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault()
+    // Trigger save logic
+    handleSRTEdit()
+  }
+}
+
+// Misc
+const downloadTranscriptionSRT = () => {
+  const blob = new Blob([transcriptionSRT.value], { type: 'text/srt' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'transcription.srt'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+const getWordCount = () => {
+  const text = transcriptionSRT.value
+  const words = text.trim().split(/\s+/)
+  return words.filter(word => word.length > 0).length
+}
+
+const getTimeAgo = (date: Date) => {
+  const now = new Date()
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  let interval = seconds / 31536000
+
+  if (interval > 1) {
+    return Math.floor(interval) + ' years ago'
+  }
+  interval = seconds / 2592000
+  if (interval > 1) {
+    return Math.floor(interval) + ' months ago'
+  }
+  interval = seconds / 86400
+  if (interval > 1) {
+    return Math.floor(interval) + ' days ago'
+  }
+  interval = seconds / 3600
+  if (interval > 1) {
+    return Math.floor(interval) + ' hours ago'
+  }
+  interval = seconds / 60
+  if (interval > 1) {
+    return Math.floor(interval) + ' minutes ago'
+  }
+  return seconds + ' seconds ago'
+}
+</script>
