@@ -69,9 +69,7 @@
           <!-- Step Button -->
           <button
             @click="navigateToStep(step.number)"
-            :disabled="
-              step.number !== 0 && (!canAccessStep(step.number) || isProcessing)
-            "
+            :disabled="isProcessing || (step.number !== 0 && (!canAccessStep(step.number)))"
             class="w-full flex flex-col items-center group"
             :class="getStepButtonClass(step.number)"
           >
@@ -256,16 +254,16 @@ function confirmReset() {
 
 function getStepButtonClass(step: WorkflowStep): string {
   const base = 'transition-opacity'
+  if (isProcessing.value) {
+    return `${base} opacity-75 cursor-wait`;
+  }
   if (step === 0) {
-    return base + ' hover:opacity-80 cursor-pointer' // Always clickable
+    return base + ' hover:opacity-80 cursor-pointer'; // Always clickable if not processing
   }
   if (!canAccessStep.value(step)) {
-    return `${base} opacity-50 cursor-not-allowed`
+    return `${base} opacity-50 cursor-not-allowed`;
   }
-  if (isProcessing.value) {
-    return `${base} opacity-75 cursor-wait`
-  }
-  return `${base} hover:opacity-80 cursor-pointer`
+  return `${base} hover:opacity-80 cursor-pointer`;
 }
 
 function getStepCircleClass(step: WorkflowStep): string {
