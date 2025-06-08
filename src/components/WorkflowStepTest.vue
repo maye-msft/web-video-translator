@@ -299,6 +299,7 @@
         </button>
       </div>
     </div>
+    <!-- end panel -->
   </div>
 </template>
 
