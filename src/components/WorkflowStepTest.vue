@@ -64,6 +64,90 @@
         </div>
       </div>
 
+      <!-- Audio Source Section -->
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold mb-4">Audio Source</h2>
+
+        <!-- Unified Audio Source Selection Panel -->
+        <div class="bg-gray-50 rounded-lg p-6">
+          <!-- Option 1: Use Audio from Step 1 -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  v-model="audioSource"
+                  type="radio"
+                  value="step1"
+                  :disabled="!hasExtractedAudio"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-3 text-sm font-medium text-gray-900">
+                  Use Audio from Step 1
+                </span>
+              </label>
+              <div
+                v-if="hasExtractedAudio"
+                class="flex items-center text-sm text-green-600"
+              >
+                <svg
+                  class="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {{ workflowState.artifacts.audioFormat?.toUpperCase() }} format,
+                {{
+                  formatFileSize(
+                    workflowState.artifacts.extractedAudio?.byteLength || 0
+                  )
+                }}
+              </div>
+            </div>
+
+            <div v-if="!hasExtractedAudio" class="ml-7 text-sm text-gray-500">
+              No audio available from Step 1. Complete Step 1 first or upload
+              audio below.
+            </div>
+          </div>
+
+          <!-- Option 2: Upload Audio File -->
+          <div>
+            <div class="flex items-center mb-3">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  v-model="audioSource"
+                  type="radio"
+                  value="upload"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-3 text-sm font-medium text-gray-900">
+                  Upload Audio File
+                </span>
+              </label>
+            </div>
+
+            <div v-if="audioSource === 'upload'" class="ml-7">
+              <p class="text-sm text-gray-600 mb-3">
+                Upload your own audio file for transcription. Supported formats:
+                MP3, WAV, M4A, OGG, FLAC up to 100MB.
+              </p>
+              <AudioUpload
+                @file-selected="handleAudioSelected"
+                @file-cleared="handleAudioCleared"
+                :initial-file="uploadedAudioFile"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-green-100 p-4 rounded mb-4">
         <p>If you can see this, the page loaded successfully!</p>
         <p>Current time: {{ new Date().toISOString() }}</p>
