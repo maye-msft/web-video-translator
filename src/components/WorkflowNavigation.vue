@@ -19,6 +19,41 @@
         </div>
       </div>
 
+      <!-- Artifacts Status Indicators -->
+      <div class="mb-4">
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span
+            v-if="workflowState.artifacts.videoFile"
+            class="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800"
+          >
+            📹 Video: {{ workflowState.artifacts.videoFile.name.slice(0, 20)
+            }}{{
+              workflowState.artifacts.videoFile.name.length > 20 ? '...' : ''
+            }}
+          </span>
+          <span
+            v-if="workflowState.artifacts.extractedAudio"
+            class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800"
+          >
+            🎵 Audio: {{ workflowState.artifacts.audioFormat?.toUpperCase() }}
+          </span>
+          <span
+            v-if="workflowState.artifacts.transcriptionSRT"
+            class="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 text-purple-800"
+          >
+            📝 Transcription:
+            {{ workflowState.artifacts.transcriptionSegments.length }} segments
+          </span>
+          <span
+            v-if="workflowState.artifacts.translatedSRT"
+            class="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800"
+          >
+            🌐 Translation: {{ workflowState.artifacts.sourceLanguage }} →
+            {{ workflowState.artifacts.targetLanguage }}
+          </span>
+        </div>
+      </div>
+
       <!-- Step Navigation -->
       <nav class="flex justify-between">
         <div v-for="step in steps" :key="step.number" class="flex-1 relative">

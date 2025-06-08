@@ -67,81 +67,98 @@
       <div class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Audio Source</h2>
 
-        <!-- Show extracted audio from Step 1 -->
-        <div
-          v-if="hasExtractedAudio"
-          class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4"
-        >
-          <div class="flex items-center">
-            <svg
-              class="h-5 w-5 text-green-600 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        <!-- Unified Audio Source Selection Panel -->
+        <div class="bg-gray-50 rounded-lg p-6">
+          <!-- Option 1: Use Audio from Step 1 -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  v-model="audioSource"
+                  type="radio"
+                  value="step1"
+                  :disabled="!hasExtractedAudio"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-3 text-sm font-medium text-gray-900">
+                  Use Audio from Step 1
+                </span>
+              </label>
+              <div v-if="hasExtractedAudio" class="flex items-center text-sm text-green-600">
+                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ workflowState.artifacts.audioFormat?.toUpperCase() }} format, {{ formatFileSize(workflowState.artifacts.extractedAudio?.byteLength || 0) }}
+              </div>
+            </div>
+            
+            <div v-if="!hasExtractedAudio" class="ml-7 text-sm text-gray-500">
+              No audio available from Step 1. Complete Step 1 first or upload audio below.
+            </div>
+          </div>
+          
+          <!-- Option 2: Upload Audio File -->
+          <div>
+            <div class="flex items-center mb-3">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  v-model="audioSource"
+                  type="radio"
+                  value="upload"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span class="ml-3 text-sm font-medium text-gray-900">
+                  Upload Audio File
+                </span>
+              </label>
+            </div>
+            
+            <div v-if="audioSource === 'upload'" class="ml-7">
+              <p class="text-sm text-gray-600 mb-3">
+                Upload your own audio file for transcription. Supported formats: MP3, WAV, M4A, OGG, FLAC up to 100MB.
+              </p>
+              <AudioUpload
+                @file-selected="handleAudioSelected"
+                @file-cleared="handleAudioCleared"
+                :initial-file="uploadedAudioFile"
               />
-            </svg>
-            <span class="text-sm font-medium text-green-800">
-              Using audio from Step 1 ({{
-                workflowState.artifacts.audioFormat?.toUpperCase()
-              }}
-              format)
-            </span>
+            </div>
           </div>
         </div>
 
-        <!-- Alternative: Upload audio file -->
-        <div v-if="!hasExtractedAudio" class="mb-4">
-          <p class="text-gray-600 mb-4">
-            Upload an audio file to generate subtitles. Supported formats: MP3,
-            WAV, M4A, OGG, FLAC up to 100MB.
-          </p>
-          <AudioUpload
-            @file-selected="handleAudioSelected"
-            @file-cleared="handleAudioCleared"
-            :initial-file="uploadedAudioFile"
-          />
-        </div>
-
-        <!-- Audio preview -->
-        <div v-if="audioURL" class="mt-4">
-          <audio :src="audioURL" controls class="w-full" preload="metadata">
-            Your browser does not support the audio element.
-          </audio>
-        </div>
       </div>
 
       <!-- Model Selection -->
       <div v-if="hasAudioSource" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Choose Whisper Model</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div
-            v-for="model in whisperModels"
-            :key="model.name"
-            class="border rounded-lg p-4 cursor-pointer transition-all"
-            :class="
-              selectedModel === model.name
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-            "
-            @click="selectedModel = model.name"
+        <div class="max-w-md">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Select Whisper Model
+          </label>
+          <select
+            v-model="selectedModel"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
           >
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-medium">{{ model.displayName }}</h3>
-              <input
-                type="radio"
-                :value="model.name"
-                v-model="selectedModel"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-            </div>
-            <p class="text-sm text-gray-600 mb-2">{{ model.description }}</p>
-            <p class="text-xs text-gray-500">Size: {{ model.size }}</p>
+            <option
+              v-for="model in whisperModels"
+              :key="model.name"
+              :value="model.name"
+            >
+              {{ model.displayName }} ({{ model.size }})
+            </option>
+          </select>
+          
+          <!-- Selected Model Description -->
+          <div v-if="selectedModelInfo" class="mt-3 p-3 bg-gray-50 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-900 mb-1">
+              {{ selectedModelInfo.displayName }}
+            </h4>
+            <p class="text-sm text-gray-600 mb-2">
+              {{ selectedModelInfo.description }}
+            </p>
+            <p class="text-xs text-gray-500">
+              Model Size: {{ selectedModelInfo.size }}
+            </p>
           </div>
         </div>
       </div>
@@ -150,9 +167,9 @@
       <div v-if="hasAudioSource && selectedModel" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Generate Transcription</h2>
         <div class="bg-gray-50 rounded-lg p-6">
-          <!-- Transcribe Button -->
+          <!-- Generate Subtitles Button (with automatic model initialization) -->
           <button
-            @click="startTranscription"
+            @click="startTranscriptionWithAutoInit"
             :disabled="isTranscribing || isModelLoading"
             class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
           >
@@ -237,9 +254,7 @@
                 />
               </svg>
               <span class="text-sm font-medium text-green-800">
-                Transcription complete ({{
-                  transcriptionSegments.length
-                }}
+                Transcription complete ({{ transcriptionSegments.length }}
                 segments)
               </span>
             </div>
@@ -252,30 +267,80 @@
           </div>
         </div>
 
-        <!-- SRT Preview -->
+        <!-- Subtitle Editor -->
         <div class="border rounded-lg">
           <div class="p-4 border-b bg-gray-50">
-            <h3 class="font-medium">Subtitle Preview</h3>
+            <div class="flex items-center justify-between">
+              <h3 class="font-medium">Subtitle Editor</h3>
+              <div class="flex items-center space-x-3">
+                <span class="text-xs text-gray-500">
+                  {{ transcriptionSegments.length }} segments | {{ getWordCount() }} words
+                </span>
+                <button
+                  @click="validateSRT"
+                  class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                >
+                  Validate
+                </button>
+                <button
+                  @click="formatSRT"
+                  class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+                >
+                  Format
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="p-4">
+          <div class="relative">
             <textarea
+              ref="srtEditor"
               v-model="transcriptionSRT"
               @input="handleSRTEdit"
-              class="w-full h-64 font-mono text-sm border-0 resize-none focus:ring-0"
-              placeholder="Transcription will appear here..."
+              @keydown="handleEditorKeydown"
+              class="w-full h-80 font-mono text-sm border-0 resize-none focus:ring-0 focus:outline-none p-4 leading-relaxed"
+              placeholder="Transcription will appear here... 
+
+Format: 
+1
+00:00:00,000 --> 00:00:05,000
+Subtitle text here"
+              spellcheck="true"
             ></textarea>
+            
+            <!-- Auto-save indicator -->
+            <div v-if="isAutoSaving" class="absolute top-2 right-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              Saving...
+            </div>
+            <div v-else-if="lastSaved" class="absolute top-2 right-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+              Saved {{ getTimeAgo(lastSaved) }}
+            </div>
+          </div>
+          
+          <!-- Validation messages -->
+          <div v-if="validationErrors.length > 0" class="p-4 border-t bg-red-50">
+            <h4 class="text-sm font-medium text-red-800 mb-2">SRT Validation Errors:</h4>
+            <ul class="text-xs text-red-700 space-y-1">
+              <li v-for="(error, index) in validationErrors" :key="index">
+                • {{ error }}
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Editor help -->
+          <div class="p-4 border-t bg-blue-50">
+            <details class="text-sm">
+              <summary class="cursor-pointer text-blue-800 font-medium mb-2">Editing Tips</summary>
+              <div class="text-blue-700 space-y-1 text-xs">
+                <p>• <strong>Format:</strong> Each subtitle needs: number, timestamps, and text</p>
+                <p>• <strong>Timestamps:</strong> Format: 00:00:00,000 --> 00:00:05,000</p>
+                <p>• <strong>Shortcuts:</strong> Ctrl+S to save, Ctrl+A to select all</p>
+                <p>• <strong>Auto-save:</strong> Changes are saved automatically every 3 seconds</p>
+              </div>
+            </details>
           </div>
         </div>
       </div>
 
-      <!-- Alternative: Upload SRT -->
-      <div v-if="!transcriptionSRT" class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Or Upload Existing SRT File</h2>
-        <p class="text-gray-600 mb-4">
-          Skip transcription by uploading an existing subtitle file.
-        </p>
-        <SRTInput @content-changed="handleSRTUpload" />
-      </div>
     </div>
   </div>
 </template>
@@ -283,23 +348,30 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import AudioUpload from '@/components/AudioUpload.vue'
-import SRTInput from '@/components/SRTInput.vue'
 import { useWorkflowState } from '@/composables/useWorkflowState'
 import {
   WHISPER_MODELS,
   generateSRT,
   downloadSRT,
-  transcribeAudio,
-  isWhisperLoaded,
-  getCurrentModelName,
+  preprocessAudio,
 } from '@/utils/whisper'
+import { whisperService } from '@/services/whisperService'
 import type { SubtitleSegment } from '@/utils/translation'
+import { formatFileSize } from '@/utils/translation'
 
 const { workflowState, updateArtifacts, setProcessing, completeStep } =
   useWorkflowState()
 
 // UI state
 const showHelp = ref<boolean>(false)
+const audioSource = ref<string>(workflowState.artifacts.extractedAudio ? 'step1' : 'upload')
+
+// Editor state
+const srtEditor = ref<HTMLTextAreaElement>()
+const isAutoSaving = ref<boolean>(false)
+const lastSaved = ref<Date | null>(null)
+const validationErrors = ref<string[]>([])
+const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
 
 // Reactive state
 const uploadedAudioFile = ref<File | null>(workflowState.artifacts.audioFile)
@@ -336,17 +408,35 @@ const getSelectedModelName = computed(() => {
   return model?.displayName || selectedModel.value
 })
 
+const selectedModelInfo = computed(() => {
+  return WHISPER_MODELS.find(m => m.name === selectedModel.value)
+})
+
 const getTranscribeButtonText = computed(() => {
   if (isModelLoading.value) return 'Loading Model...'
-  if (isTranscribing.value) return 'Transcribing...'
-  if (isWhisperLoaded() && getCurrentModelName() === selectedModel.value) {
-    return 'Start Transcription'
+  if (isTranscribing.value) return 'Generating Subtitles...'
+  if (whisperService.isModelLoaded() && whisperService.getCurrentModelName() === selectedModel.value) {
+    return 'Generate Subtitles'
   }
-  return `Load ${getSelectedModelName.value} & Transcribe`
+  return `Load ${getSelectedModelName.value} & Generate Subtitles`
 })
 
 // Setup audio URL on mount
 onMounted(() => {
+  // Initialize from workflow state (in case we navigated back to this step)
+  if (workflowState.artifacts.audioFile) {
+    uploadedAudioFile.value = workflowState.artifacts.audioFile
+  }
+  if (workflowState.artifacts.selectedWhisperModel) {
+    selectedModel.value = workflowState.artifacts.selectedWhisperModel
+  }
+  if (workflowState.artifacts.transcriptionSRT) {
+    transcriptionSRT.value = workflowState.artifacts.transcriptionSRT
+  }
+  if (workflowState.artifacts.transcriptionSegments) {
+    transcriptionSegments.value = workflowState.artifacts.transcriptionSegments
+  }
+  
   createAudioURL()
 })
 
@@ -372,6 +462,41 @@ watch([selectedModel, transcriptionSRT, transcriptionSegments], () => {
   }
 })
 
+// Watch for workflow state changes to sync back to local state
+watch(() => workflowState.artifacts, (newArtifacts) => {
+  if (newArtifacts.audioFile !== uploadedAudioFile.value) {
+    uploadedAudioFile.value = newArtifacts.audioFile
+    createAudioURL()
+  }
+  if (newArtifacts.selectedWhisperModel !== selectedModel.value) {
+    selectedModel.value = newArtifacts.selectedWhisperModel
+  }
+  if (newArtifacts.transcriptionSRT !== transcriptionSRT.value) {
+    transcriptionSRT.value = newArtifacts.transcriptionSRT
+  }
+  if (newArtifacts.transcriptionSegments !== transcriptionSegments.value) {
+    transcriptionSegments.value = newArtifacts.transcriptionSegments
+  }
+}, { deep: true })
+
+// Initialize audio source selection based on workflow state
+watch([hasExtractedAudio], () => {
+  if (hasExtractedAudio.value && audioSource.value === 'upload') {
+    audioSource.value = 'step1'
+  }
+}, { immediate: true })
+
+// Watch for audio source selection changes
+watch(audioSource, (newSource) => {
+  if (newSource === 'step1' && hasExtractedAudio.value) {
+    // Use Step 1 audio
+    updateArtifacts({ audioFile: null }) // Clear uploaded audio
+  } else if (newSource === 'upload' && uploadedAudioFile.value) {
+    // Use uploaded audio
+    updateArtifacts({ audioFile: uploadedAudioFile.value })
+  }
+})
+
 // Methods
 function createAudioURL() {
   if (audioURL.value) {
@@ -393,16 +518,63 @@ function createAudioURL() {
 
 function handleAudioSelected(file: File) {
   uploadedAudioFile.value = file
-  updateArtifacts({ audioFile: file })
+  if (audioSource.value === 'upload') {
+    updateArtifacts({ audioFile: file })
+  }
   createAudioURL()
 }
 
 function handleAudioCleared() {
   uploadedAudioFile.value = null
-  updateArtifacts({ audioFile: null })
+  if (audioSource.value === 'upload') {
+    updateArtifacts({ audioFile: null })
+  }
   if (audioURL.value) {
     URL.revokeObjectURL(audioURL.value)
     audioURL.value = ''
+  }
+}
+
+async function startTranscriptionWithAutoInit() {
+  if (!hasAudioSource.value) return
+
+  try {
+    // Initialize model if not ready
+    if (!whisperService.isModelLoaded() || whisperService.getCurrentModelName() !== selectedModel.value) {
+      await initializeWhisperModel()
+    }
+
+    // Proceed with transcription
+    await startTranscription()
+  } catch (error) {
+    console.error('Transcription with auto-init failed:', error)
+    transcriptionError.value =
+      error instanceof Error ? error.message : 'Transcription failed'
+  }
+}
+
+async function initializeWhisperModel() {
+  try {
+    isModelLoading.value = true
+    modelLoadProgress.value = 0
+    transcriptionStatus.value = `Loading ${getSelectedModelName.value} model...`
+    
+    await whisperService.initializeWhisper(
+      selectedModel.value,
+      (progress: number) => {
+        modelLoadProgress.value = progress
+        transcriptionStatus.value = `Loading ${getSelectedModelName.value} model...`
+      }
+    )
+    
+    isModelLoading.value = false
+  } catch (err) {
+    transcriptionError.value =
+      err instanceof Error
+        ? `Model load failed: ${err.message}`
+        : 'Model load failed'
+    isModelLoading.value = false
+    throw err
   }
 }
 
@@ -437,24 +609,25 @@ async function startTranscription() {
       throw new Error('No audio source available')
     }
 
-    // Progress callbacks
-    const onModelLoad = (progress: number) => {
-      isModelLoading.value = true
-      modelLoadProgress.value = progress
-      transcriptionStatus.value = `Loading ${getSelectedModelName.value} model...`
-    }
-
+    // Convert audio file to Float32Array
+    const audioData = await preprocessAudio(audioFile)
+    
+    // Progress callback for transcription
     const onTranscriptionProgress = (progress: number) => {
       isModelLoading.value = false
       transcriptionProgress.value = progress
-      transcriptionStatus.value = `Transcribing audio... ${progress}%`
+      transcriptionStatus.value = `Generating subtitles... ${progress}%`
     }
 
-    // Start transcription
-    const result = await transcribeAudio(
-      audioFile,
-      selectedModel.value,
-      onModelLoad,
+    // Start transcription using whisper service
+    const result = await whisperService.transcribeAudio(
+      audioData,
+      {
+        language: 'english',
+        task: 'transcribe',
+        return_timestamps: true,
+        chunk_length_s: 30
+      },
       onTranscriptionProgress
     )
 
@@ -486,23 +659,187 @@ async function startTranscription() {
 }
 
 function handleSRTEdit() {
+  // Clear previous auto-save timeout
+  if (autoSaveTimeout.value) {
+    clearTimeout(autoSaveTimeout.value)
+  }
+  
+  // Clear validation errors when editing
+  validationErrors.value = []
+  
+  // Set up auto-save with 3-second delay
+  autoSaveTimeout.value = setTimeout(() => {
+    autoSaveSRT()
+  }, 3000)
+}
+
+function autoSaveSRT() {
+  isAutoSaving.value = true
+  
   // Update workflow state when user edits SRT
   updateArtifacts({
     transcriptionSRT: transcriptionSRT.value,
     originalSRT: transcriptionSRT.value,
   })
+  
+  // Parse and update segments
+  try {
+    const segments = parseSRTToSegments(transcriptionSRT.value)
+    transcriptionSegments.value = segments
+    updateArtifacts({
+      transcriptionSegments: segments,
+    })
+  } catch (error) {
+    console.warn('Failed to parse SRT during auto-save:', error)
+  }
+  
+  setTimeout(() => {
+    isAutoSaving.value = false
+    lastSaved.value = new Date()
+  }, 500)
 }
 
-function handleSRTUpload(segments: SubtitleSegment[], rawContent: string) {
-  transcriptionSRT.value = rawContent
-  transcriptionSegments.value = segments
+function handleEditorKeydown(event: KeyboardEvent) {
+  // Handle Ctrl+S for manual save
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault()
+    autoSaveSRT()
+  }
+}
 
-  updateArtifacts({
-    transcriptionSRT: rawContent,
-    transcriptionSegments: segments,
-    originalSRT: rawContent,
+function getWordCount(): number {
+  if (!transcriptionSRT.value) return 0
+  return transcriptionSRT.value
+    .replace(/\d+\n/g, '') // Remove subtitle numbers
+    .replace(/\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}/g, '') // Remove timestamps
+    .trim()
+    .split(/\s+/)
+    .filter(word => word.length > 0).length
+}
+
+
+function getTimeAgo(date: Date): string {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
+  if (seconds < 60) return 'now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  return `${hours}h ago`
+}
+
+function validateSRT() {
+  validationErrors.value = []
+  
+  if (!transcriptionSRT.value.trim()) {
+    validationErrors.value.push('SRT content is empty')
+    return
+  }
+  
+  const lines = transcriptionSRT.value.split('\n')
+  let currentIndex = 1
+  let i = 0
+  
+  while (i < lines.length) {
+    // Skip empty lines
+    while (i < lines.length && !lines[i].trim()) {
+      i++
+    }
+    
+    if (i >= lines.length) break
+    
+    // Check subtitle number
+    if (!lines[i] || !lines[i].match(/^\d+$/)) {
+      validationErrors.value.push(`Line ${i + 1}: Expected subtitle number ${currentIndex}, found "${lines[i]}"`)
+      break
+    }
+    
+    if (parseInt(lines[i]) !== currentIndex) {
+      validationErrors.value.push(`Line ${i + 1}: Expected subtitle number ${currentIndex}, found ${lines[i]}`)
+    }
+    
+    i++
+    
+    // Check timestamp
+    if (i >= lines.length || !lines[i].match(/^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$/)) {
+      validationErrors.value.push(`Line ${i + 1}: Invalid or missing timestamp format`)
+      break
+    }
+    
+    i++
+    
+    // Check subtitle text (at least one line)
+    if (i >= lines.length || !lines[i].trim()) {
+      validationErrors.value.push(`Line ${i + 1}: Missing subtitle text`)
+      break
+    }
+    
+    // Skip subtitle text lines
+    while (i < lines.length && lines[i].trim()) {
+      i++
+    }
+    
+    currentIndex++
+  }
+  
+  if (validationErrors.value.length === 0) {
+    validationErrors.value.push('✓ SRT format is valid')
+    setTimeout(() => {
+      validationErrors.value = []
+    }, 3000)
+  }
+}
+
+function formatSRT() {
+  try {
+    const segments = parseSRTToSegments(transcriptionSRT.value)
+    const formattedSRT = generateSRT({ text: '', chunks: segments.map(s => ({ text: s.text, timestamp: s.timestamp })) })
+    transcriptionSRT.value = formattedSRT
+    autoSaveSRT()
+  } catch (error) {
+    validationErrors.value = ['Failed to format SRT: Invalid format']
+  }
+}
+
+function parseSRTToSegments(srtContent: string): SubtitleSegment[] {
+  const segments: SubtitleSegment[] = []
+  const blocks = srtContent.trim().split('\n\n')
+  
+  blocks.forEach((block, index) => {
+    const lines = block.trim().split('\n')
+    if (lines.length >= 3) {
+      const timestampLine = lines[1]
+      const textLines = lines.slice(2)
+      
+      const timestampMatch = timestampLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/)
+      if (timestampMatch) {
+        const startTime = timestampMatch[1]
+        const endTime = timestampMatch[2]
+        const text = textLines.join(' ').trim()
+        
+        // Convert timestamp to seconds for compatibility
+        const startSeconds = parseTimestamp(startTime)
+        const endSeconds = parseTimestamp(endTime)
+        
+        segments.push({
+          index: index + 1,
+          startTime,
+          endTime,
+          text,
+          timestamp: [startSeconds, endSeconds]
+        })
+      }
+    }
   })
+  
+  return segments
 }
+
+function parseTimestamp(timestamp: string): number {
+  const [time, ms] = timestamp.split(',')
+  const [hours, minutes, seconds] = time.split(':').map(Number)
+  return hours * 3600 + minutes * 60 + seconds + parseInt(ms) / 1000
+}
+
 
 function downloadSRT() {
   if (transcriptionSRT.value) {

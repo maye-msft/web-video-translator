@@ -66,289 +66,358 @@
         </div>
       </div>
 
-      <!-- Source Content Section -->
+      <!-- Source Content Selection Panel -->
       <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Source Content</h2>
-
-        <!-- Video from Step 1 -->
-        <div
-          v-if="hasVideoFile"
-          class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4"
-        >
-          <div class="flex items-center">
-            <svg
-              class="h-5 w-5 text-green-600 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-8 0v18m0-18h8m-8 0h8v18H7V4z"
-              />
-            </svg>
-            <span class="text-sm font-medium text-green-800">
-              Video: {{ workflowState.artifacts.videoFile?.name }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Translated Subtitles from Step 3 -->
-        <div
-          v-if="hasTranslatedSubtitles"
-          class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <svg
-                class="h-5 w-5 text-green-600 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        <h2 class="text-lg font-semibold mb-4">Choose Video and Subtitles</h2>
+        
+        <!-- Combined Source Selection Panel -->
+        <div class="bg-gray-50 rounded-lg p-6">
+          <!-- Video Selection -->
+          <div class="mb-6">
+            <h3 class="font-medium text-gray-900 mb-3">Video Source</h3>
+            
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    v-model="videoSource"
+                    type="radio"
+                    value="workflow"
+                    :disabled="!hasWorkflowVideo"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span class="ml-3 text-sm font-medium text-gray-900">
+                    Use Video from Step 1
+                  </span>
+                </label>
+                <div v-if="hasWorkflowVideo" class="flex items-center text-sm text-green-600">
+                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ workflowState.artifacts.videoFile?.name }}
+                </div>
+              </div>
+              
+              <div v-if="!hasWorkflowVideo" class="ml-7 text-sm text-gray-500">
+                No video available from Step 1. Complete Step 1 first or upload video below.
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex items-center mb-3">
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    v-model="videoSource"
+                    type="radio"
+                    value="upload"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span class="ml-3 text-sm font-medium text-gray-900">
+                    Upload Video File
+                  </span>
+                </label>
+              </div>
+              
+              <div v-if="videoSource === 'upload'" class="ml-7">
+                <VideoUpload
+                  @file-selected="handleVideoSelected"
+                  @file-cleared="handleVideoCleared"
+                  :initial-file="uploadedVideoFile"
                 />
-              </svg>
-              <span class="text-sm font-medium text-green-800">
-                Translated Subtitles:
-                {{ workflowState.artifacts.sourceLanguage }} →
-                {{ workflowState.artifacts.targetLanguage }}
-              </span>
-            </div>
-            <button
-              @click="showSubtitlePreview = !showSubtitlePreview"
-              class="text-sm text-blue-600 hover:text-blue-700 underline"
-            >
-              {{ showSubtitlePreview ? 'Hide' : 'Show' }} Preview
-            </button>
-          </div>
-
-          <!-- Subtitle Preview -->
-          <div
-            v-if="showSubtitlePreview"
-            class="mt-4 p-3 bg-white rounded border"
-          >
-            <div class="text-sm text-gray-600 max-h-32 overflow-y-auto">
-              <pre class="whitespace-pre-wrap font-mono">{{
-                subtitlePreview
-              }}</pre>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Upload alternative content if missing -->
-        <div v-if="!hasVideoFile || !hasTranslatedSubtitles" class="space-y-4">
-          <!-- Upload Video -->
-          <div v-if="!hasVideoFile">
-            <h3 class="font-medium text-gray-900 mb-2">Upload Video File</h3>
-            <VideoUpload
-              @file-selected="handleVideoSelected"
-              @file-cleared="handleVideoCleared"
-            />
-          </div>
-
-          <!-- Upload Subtitles -->
-          <div v-if="!hasTranslatedSubtitles">
-            <h3 class="font-medium text-gray-900 mb-2">Upload Subtitle File</h3>
-            <SRTInput @content-changed="handleSRTUpload" />
+          
+          <!-- Subtitle Selection -->
+          <div class="border-t pt-6">
+            <h3 class="font-medium text-gray-900 mb-3">Subtitle Source</h3>
+            
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    v-model="subtitleSource"
+                    type="radio"
+                    value="workflow"
+                    :disabled="!hasWorkflowSubtitles"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span class="ml-3 text-sm font-medium text-gray-900">
+                    Use Subtitles from Step 3
+                  </span>
+                </label>
+                <div v-if="hasWorkflowSubtitles" class="flex items-center text-sm text-green-600">
+                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ workflowState.artifacts.sourceLanguage }} → {{ workflowState.artifacts.targetLanguage }}
+                </div>
+              </div>
+              
+              <div v-if="hasWorkflowSubtitles && subtitleSource === 'workflow'" class="ml-7">
+                <div class="bg-white border rounded-lg p-3">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-700">Preview:</span>
+                    <button
+                      @click="showWorkflowSubtitlePreview = !showWorkflowSubtitlePreview"
+                      class="text-xs text-blue-600 hover:text-blue-700"
+                    >
+                      {{ showWorkflowSubtitlePreview ? 'Hide' : 'Show' }} Full Content
+                    </button>
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <pre v-if="showWorkflowSubtitlePreview" class="whitespace-pre-wrap font-mono max-h-32 overflow-y-auto">{{ workflowState.artifacts.translatedSRT }}</pre>
+                    <pre v-else class="whitespace-pre-wrap font-mono">{{ subtitlePreview }}</pre>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="!hasWorkflowSubtitles" class="ml-7 text-sm text-gray-500">
+                No subtitles available from Step 3. Complete Step 3 first or upload subtitles below.
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex items-center mb-3">
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    v-model="subtitleSource"
+                    type="radio"
+                    value="upload"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span class="ml-3 text-sm font-medium text-gray-900">
+                    Upload Subtitle File
+                  </span>
+                </label>
+              </div>
+              
+              <div v-if="subtitleSource === 'upload'" class="ml-7">
+                <p class="text-sm text-gray-600 mb-3">
+                  Upload an SRT subtitle file to merge with your video.
+                </p>
+                <SRTInput @content-changed="handleSRTUpload" />
+                
+                <div v-if="uploadedSRTPreview" class="mt-3 bg-white border rounded-lg p-3">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-700">Uploaded Content Preview:</span>
+                    <span class="text-xs text-green-600">{{ uploadedSegmentCount }} segments</span>
+                  </div>
+                  <pre class="text-sm text-gray-600 whitespace-pre-wrap font-mono max-h-24 overflow-y-auto">{{ uploadedSRTPreview }}</pre>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Subtitle Styling -->
-      <div v-if="hasVideoFile && hasTranslatedSubtitles" class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Subtitle Styling</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Font Settings -->
-          <div class="space-y-4">
-            <h3 class="font-medium text-gray-700">Font</h3>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Font Family</label
-              >
-              <select
-                v-model="subtitleStyle.fontFamily"
-                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="Arial">Arial</option>
-                <option value="Helvetica">Helvetica</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Courier New">Courier New</option>
-                <option value="Verdana">Verdana</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Font Size</label
-              >
-              <input
-                v-model.number="subtitleStyle.fontSize"
-                type="range"
-                min="12"
-                max="72"
-                class="w-full"
-              />
-              <span class="text-sm text-gray-500"
-                >{{ subtitleStyle.fontSize }}px</span
-              >
-            </div>
-            <div class="flex space-x-4">
-              <label class="flex items-center">
-                <input
-                  v-model="subtitleStyle.bold"
-                  type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                />
-                <span class="ml-2 text-sm">Bold</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  v-model="subtitleStyle.italic"
-                  type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                />
-                <span class="ml-2 text-sm">Italic</span>
-              </label>
-            </div>
-          </div>
+      <!-- Subtitle Styling (Collapsible) -->
+      <div v-if="hasContentReady" class="mb-8">
+        <div class="border rounded-lg">
+          <button
+            @click="showStyling = !showStyling"
+            class="w-full flex items-center justify-between p-4 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <h2 class="text-lg font-semibold text-gray-900">Subtitle Styling (Optional)</h2>
+            <svg
+              class="w-5 h-5 text-gray-500 transition-transform"
+              :class="{ 'rotate-180': showStyling }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          <div v-if="showStyling" class="p-6 border-t">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <!-- Font Settings -->
+              <div class="space-y-4">
+                <h3 class="font-medium text-gray-700">Font</h3>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Font Family</label
+                  >
+                  <select
+                    v-model="subtitleStyle.fontFamily"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Verdana">Verdana</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Font Size</label
+                  >
+                  <input
+                    v-model.number="subtitleStyle.fontSize"
+                    type="range"
+                    min="12"
+                    max="72"
+                    class="w-full"
+                  />
+                  <span class="text-sm text-gray-500"
+                    >{{ subtitleStyle.fontSize }}px</span
+                  >
+                </div>
+                <div class="flex space-x-4">
+                  <label class="flex items-center">
+                    <input
+                      v-model="subtitleStyle.bold"
+                      type="checkbox"
+                      class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <span class="ml-2 text-sm">Bold</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input
+                      v-model="subtitleStyle.italic"
+                      type="checkbox"
+                      class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <span class="ml-2 text-sm">Italic</span>
+                  </label>
+                </div>
+              </div>
 
           <!-- Colors -->
           <div class="space-y-4">
-            <h3 class="font-medium text-gray-700">Colors</h3>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Text Color</label
-              >
-              <input
-                v-model="subtitleStyle.fontColor"
-                type="color"
-                class="h-10 w-full rounded border border-gray-300"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Background Color</label
-              >
-              <input
-                v-model="subtitleStyle.backgroundColor"
-                type="color"
-                class="h-10 w-full rounded border border-gray-300"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Background Opacity</label
-              >
-              <input
-                v-model.number="subtitleStyle.backgroundOpacity"
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                class="w-full"
-              />
-              <span class="text-sm text-gray-500"
-                >{{ Math.round(subtitleStyle.backgroundOpacity * 100) }}%</span
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Outline Color</label
-              >
-              <input
-                v-model="subtitleStyle.outlineColor"
-                type="color"
-                class="h-10 w-full rounded border border-gray-300"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Outline Width</label
-              >
-              <input
-                v-model.number="subtitleStyle.outlineWidth"
-                type="range"
-                min="0"
-                max="5"
-                class="w-full"
-              />
-              <span class="text-sm text-gray-500"
-                >{{ subtitleStyle.outlineWidth }}px</span
-              >
-            </div>
+                <h3 class="font-medium text-gray-700">Colors</h3>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Text Color</label
+                  >
+                  <input
+                    v-model="subtitleStyle.fontColor"
+                    type="color"
+                    class="h-10 w-full rounded border border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Background Color</label
+                  >
+                  <input
+                    v-model="subtitleStyle.backgroundColor"
+                    type="color"
+                    class="h-10 w-full rounded border border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Background Opacity</label
+                  >
+                  <input
+                    v-model.number="subtitleStyle.backgroundOpacity"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    class="w-full"
+                  />
+                  <span class="text-sm text-gray-500"
+                    >{{ Math.round(subtitleStyle.backgroundOpacity * 100) }}%</span
+                  >
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Outline Color</label
+                  >
+                  <input
+                    v-model="subtitleStyle.outlineColor"
+                    type="color"
+                    class="h-10 w-full rounded border border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Outline Width</label
+                  >
+                  <input
+                    v-model.number="subtitleStyle.outlineWidth"
+                    type="range"
+                    min="0"
+                    max="5"
+                    class="w-full"
+                  />
+                  <span class="text-sm text-gray-500"
+                    >{{ subtitleStyle.outlineWidth }}px</span
+                  >
+                </div>
           </div>
 
           <!-- Position -->
           <div class="space-y-4">
-            <h3 class="font-medium text-gray-700">Position</h3>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Horizontal Alignment</label
-              >
-              <select
-                v-model="subtitleStyle.alignment"
-                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Vertical Position</label
-              >
-              <select
-                v-model="subtitleStyle.verticalPosition"
-                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="top">Top</option>
-                <option value="middle">Middle</option>
-                <option value="bottom">Bottom</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Horizontal Margin</label
-              >
-              <input
-                v-model.number="subtitleStyle.marginHorizontal"
-                type="range"
-                min="0"
-                max="100"
-                class="w-full"
-              />
-              <span class="text-sm text-gray-500"
-                >{{ subtitleStyle.marginHorizontal }}px</span
-              >
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Vertical Margin</label
-              >
-              <input
-                v-model.number="subtitleStyle.marginVertical"
-                type="range"
-                min="0"
-                max="100"
-                class="w-full"
-              />
-              <span class="text-sm text-gray-500"
-                >{{ subtitleStyle.marginVertical }}px</span
-              >
+                <h3 class="font-medium text-gray-700">Position</h3>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Horizontal Alignment</label
+                  >
+                  <select
+                    v-model="subtitleStyle.alignment"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Vertical Position</label
+                  >
+                  <select
+                    v-model="subtitleStyle.verticalPosition"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="top">Top</option>
+                    <option value="middle">Middle</option>
+                    <option value="bottom">Bottom</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Horizontal Margin</label
+                  >
+                  <input
+                    v-model.number="subtitleStyle.marginHorizontal"
+                    type="range"
+                    min="0"
+                    max="100"
+                    class="w-full"
+                  />
+                  <span class="text-sm text-gray-500"
+                    >{{ subtitleStyle.marginHorizontal }}px</span
+                  >
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Vertical Margin</label
+                  >
+                  <input
+                    v-model.number="subtitleStyle.marginVertical"
+                    type="range"
+                    min="0"
+                    max="100"
+                    class="w-full"
+                  />
+                  <span class="text-sm text-gray-500"
+                    >{{ subtitleStyle.marginVertical }}px</span
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Preview Section -->
-      <div v-if="hasVideoFile && hasTranslatedSubtitles" class="mb-8">
+      <div v-if="hasContentReady" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Preview</h2>
         <div class="space-y-4">
           <div class="flex items-center space-x-4">
@@ -386,7 +455,7 @@
       </div>
 
       <!-- Output Settings -->
-      <div v-if="hasVideoFile && hasTranslatedSubtitles" class="mb-8">
+      <div v-if="hasContentReady" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Output Settings</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -416,13 +485,13 @@
       </div>
 
       <!-- Final Processing -->
-      <div v-if="hasVideoFile && hasTranslatedSubtitles" class="mb-8">
+      <div v-if="hasContentReady" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Generate Final Video</h2>
         <div class="space-y-4">
           <button
             @click="processVideo"
             :disabled="isProcessing || !isFFmpegReady"
-            class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {{ isProcessing ? 'Processing...' : 'Merge Subtitles into Video' }}
           </button>
@@ -500,15 +569,13 @@
         </div>
       </div>
 
-      <!-- Workflow Completion Celebration -->
+      <!-- Simple Completion -->  
       <div v-if="isWorkflowComplete" class="mb-8">
-        <div
-          class="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg p-8 text-center"
-        >
-          <div class="flex justify-center mb-4">
-            <div class="relative">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
               <svg
-                class="h-16 w-16 text-green-600 animate-bounce"
+                class="h-5 w-5 text-green-600 mr-2"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -520,119 +587,15 @@
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <div class="absolute -top-1 -right-1">
-                <svg
-                  class="h-6 w-6 text-yellow-500"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                  />
-                </svg>
-              </div>
+              <span class="text-sm font-medium text-green-800">
+                Video processing complete! Your translated video is ready.
+              </span>
             </div>
-          </div>
-
-          <h3 class="text-2xl font-bold text-green-800 mb-3">
-            🎉 Video Translation Complete! 🎉
-          </h3>
-          <p class="text-lg text-green-700 mb-4">
-            Congratulations! Your video has been successfully translated and is
-            ready to share.
-          </p>
-
-          <div
-            class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-green-700 mb-6"
-          >
-            <div class="flex items-center justify-center">
-              <svg
-                class="h-5 w-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0V6a1 1 0 001 1h8a1 1 0 001-1V4"
-                />
-              </svg>
-              Audio Extracted
-            </div>
-            <div class="flex items-center justify-center">
-              <svg
-                class="h-5 w-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-              Subtitles Generated
-            </div>
-            <div class="flex items-center justify-center">
-              <svg
-                class="h-5 w-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-                />
-              </svg>
-              Translation Applied
-            </div>
-          </div>
-
-          <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               @click="downloadFinalVideo"
-              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              class="text-sm text-blue-600 hover:text-blue-700 underline font-medium"
             >
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Download Video Again
-            </button>
-            <button
-              @click="shareResults"
-              class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                />
-              </svg>
-              Share Results
+              Download Video
             </button>
           </div>
         </div>
@@ -664,6 +627,13 @@ const { workflowState, updateArtifacts, setProcessing, completeStep } =
 
 // UI state
 const showHelp = ref<boolean>(false)
+const showStyling = ref<boolean>(false)
+const videoSource = ref<string>(workflowState.artifacts.videoFile ? 'workflow' : 'upload')
+const subtitleSource = ref<string>(workflowState.artifacts.translatedSRT ? 'workflow' : 'upload')
+const showWorkflowSubtitlePreview = ref<boolean>(false)
+const uploadedVideoFile = ref<File | null>(null)
+const uploadedSRTPreview = ref<string>('')
+const uploadedSegmentCount = ref<number>(0)
 
 // Reactive state
 const subtitleStyle = reactive<SubtitleStyle>({
@@ -676,7 +646,6 @@ const outputFormat = ref<'mp4' | 'webm'>(
 const outputFilename = ref<string>('video-with-subtitles')
 const previewTime = ref<number>(5)
 const previewImage = ref<string>('')
-const showSubtitlePreview = ref<boolean>(false)
 
 // FFmpeg state
 const isFFmpegReady = ref<boolean>(false)
@@ -690,10 +659,15 @@ const processingStatus = ref<string>('')
 const processingError = ref<string>('')
 
 // Computed properties
-const hasVideoFile = computed(() => workflowState.artifacts.videoFile !== null)
-const hasTranslatedSubtitles = computed(
-  () => workflowState.artifacts.translatedSRT !== ''
-)
+const hasWorkflowVideo = computed(() => workflowState.artifacts.videoFile !== null)
+const hasWorkflowSubtitles = computed(() => workflowState.artifacts.translatedSRT !== '')
+const hasVideoFile = computed(() => {
+  return videoSource.value === 'workflow' ? hasWorkflowVideo.value : uploadedVideoFile.value !== null
+})
+const hasTranslatedSubtitles = computed(() => {
+  return subtitleSource.value === 'workflow' ? hasWorkflowSubtitles.value : uploadedSRTPreview.value !== ''
+})
+const hasContentReady = computed(() => hasVideoFile.value && hasTranslatedSubtitles.value)
 
 const subtitlePreview = computed(() => {
   const content = workflowState.artifacts.translatedSRT || ''
@@ -724,20 +698,61 @@ watch(
   { deep: true }
 )
 
+// Initialize source selections based on workflow state
+watch([hasWorkflowVideo, hasWorkflowSubtitles], () => {
+  if (hasWorkflowVideo.value && videoSource.value === 'upload') {
+    videoSource.value = 'workflow'
+  }
+  if (hasWorkflowSubtitles.value && subtitleSource.value === 'upload') {
+    subtitleSource.value = 'workflow'
+  }
+}, { immediate: true })
+
+// Watch for source selection changes
+watch(videoSource, (newSource) => {
+  if (newSource === 'workflow' && hasWorkflowVideo.value) {
+    updateArtifacts({ videoFile: workflowState.artifacts.videoFile })
+  } else if (newSource === 'upload' && uploadedVideoFile.value) {
+    updateArtifacts({ videoFile: uploadedVideoFile.value })
+  }
+})
+
+watch(subtitleSource, (newSource) => {
+  if (newSource === 'workflow' && hasWorkflowSubtitles.value) {
+    updateArtifacts({ 
+      translatedSRT: workflowState.artifacts.translatedSRT,
+      translationSegments: workflowState.artifacts.translationSegments 
+    })
+  } else if (newSource === 'upload' && uploadedSRTPreview.value) {
+    // Keep uploaded content - already handled in handleSRTUpload
+  }
+})
+
 // Methods
 function handleVideoSelected(file: File) {
-  updateArtifacts({ videoFile: file })
+  uploadedVideoFile.value = file
+  if (videoSource.value === 'upload') {
+    updateArtifacts({ videoFile: file })
+  }
 }
 
 function handleVideoCleared() {
-  updateArtifacts({ videoFile: null })
+  uploadedVideoFile.value = null
+  if (videoSource.value === 'upload') {
+    updateArtifacts({ videoFile: null })
+  }
 }
 
 function handleSRTUpload(segments: SubtitleSegment[], rawContent: string) {
-  updateArtifacts({
-    translatedSRT: rawContent,
-    translationSegments: segments,
-  })
+  uploadedSRTPreview.value = rawContent.slice(0, 200) + (rawContent.length > 200 ? '...' : '')
+  uploadedSegmentCount.value = segments.length
+  
+  if (subtitleSource.value === 'upload') {
+    updateArtifacts({
+      translatedSRT: rawContent,
+      translationSegments: segments,
+    })
+  }
 }
 
 async function initializeFFmpeg() {
@@ -871,9 +886,10 @@ async function processVideo() {
 }
 
 function downloadFinalVideo() {
-  if (finalVideoResult.value?.videoData) {
-    const filename = `translated-video-${workflowState.artifacts.targetLanguage}.${outputFormat.value}`
-    downloadFile(finalVideoResult.value.videoData, filename)
+  if (workflowState.artifacts.finalVideo) {
+    const filename = `${outputFilename.value}.${outputFormat.value}`
+    const mimeType = outputFormat.value === 'mp4' ? 'video/mp4' : 'video/webm'
+    downloadFile(workflowState.artifacts.finalVideo, filename, mimeType)
   }
 }
 

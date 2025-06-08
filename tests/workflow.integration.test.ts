@@ -127,9 +127,9 @@ describe('Workflow State Management Integration Tests', () => {
       const { canAccessStep, updateArtifacts, completeStep } =
         useWorkflowState()
 
-      // Initially, only step 1 should be accessible
+      // Initially, steps 1 and 2 should be accessible (step 2 allows direct access)
       expect(canAccessStep.value(1)).toBe(true)
-      expect(canAccessStep.value(2)).toBe(false)
+      expect(canAccessStep.value(2)).toBe(true)
       expect(canAccessStep.value(3)).toBe(false)
       expect(canAccessStep.value(4)).toBe(false)
 
@@ -166,9 +166,9 @@ describe('Workflow State Management Integration Tests', () => {
       const { workflowState, canProceedToNext, proceedToNext, nextStep } =
         useWorkflowState()
 
-      // Initially can't proceed
+      // Initially can't proceed from step 1 (no artifacts), but next step is available
       expect(canProceedToNext.value).toBe(false)
-      expect(nextStep.value).toBe(null)
+      expect(nextStep.value).toBe(2) // Step 2 is always accessible
 
       // Set up step 1 completion conditions
       const { updateArtifacts } = useWorkflowState()

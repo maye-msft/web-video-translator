@@ -1,4 +1,4 @@
-import { ref, reactive, computed, watch, readonly } from 'vue'
+import { reactive, computed, watch, readonly } from 'vue'
 import type { SubtitleSegment } from '@/utils/translation'
 import type { SubtitleStyle } from '@/utils/ffmpeg'
 
@@ -10,20 +10,20 @@ export interface WorkflowArtifacts {
   videoFile: File | null
   extractedAudio: Uint8Array | null
   audioFormat: 'wav' | 'mp3'
-  
-  // Step 2 artifacts  
+
+  // Step 2 artifacts
   audioFile: File | null
   transcriptionSRT: string
   transcriptionSegments: SubtitleSegment[]
   selectedWhisperModel: string
-  
+
   // Step 3 artifacts
   originalSRT: string
   translatedSRT: string
   sourceLanguage: string
   targetLanguage: string
   translationSegments: SubtitleSegment[]
-  
+
   // Step 4 artifacts
   subtitleStyle: SubtitleStyle | null
   outputFormat: 'mp4' | 'webm'
@@ -54,7 +54,7 @@ const defaultArtifacts: WorkflowArtifacts = {
   translationSegments: [],
   subtitleStyle: null,
   outputFormat: 'mp4',
-  finalVideo: null
+  finalVideo: null,
 }
 
 // Global workflow state
@@ -63,29 +63,32 @@ const workflowState = reactive<WorkflowState>({
   completedSteps: [],
   artifacts: { ...defaultArtifacts },
   isProcessing: false,
-  lastSaved: null
+  lastSaved: null,
+})
+
+// In-memory storage for binary data (not persisted to localStorage)
+const binaryArtifacts = reactive({
+  videoFile: null as File | null,
+  extractedAudio: null as Uint8Array | null,
+  audioFile: null as File | null,
+  finalVideo: null as Uint8Array | null,
 })
 
 // Storage key for persistence
 const STORAGE_KEY = 'video-translator-workflow'
 
 export function useWorkflowState() {
-  
   // Computed properties
   const canAccessStep = computed(() => (step: WorkflowStep): boolean => {
     switch (step) {
       case 1:
         return true // Always can access step 1
       case 2:
-        return workflowState.completedSteps.includes(1) || 
-               workflowState.artifacts.videoFile !== null ||
-               workflowState.artifacts.audioFile !== null
+        return true // Always can access step 2 - users can upload audio directly
       case 3:
-        return workflowState.completedSteps.includes(2) || 
-               workflowState.artifacts.transcriptionSRT !== ''
+        return true // Always can access step 3 - users can upload SRT files directly
       case 4:
-        return workflowState.completedSteps.includes(3) || 
-               workflowState.artifacts.translatedSRT !== ''
+        return true // Always can access step 4 - users can upload video and subtitles directly
       default:
         return false
     }
@@ -99,8 +102,8 @@ export function useWorkflowState() {
 
   const nextStep = computed((): WorkflowStep | null => {
     const current = workflowState.currentStep
-    if (current < 4 && canAccessStep.value(current + 1 as WorkflowStep)) {
-      return current + 1 as WorkflowStep
+    if (current < 4 && canAccessStep.value((current + 1) as WorkflowStep)) {
+      return (current + 1) as WorkflowStep
     }
     return null
   })
@@ -109,8 +112,10 @@ export function useWorkflowState() {
     const step = workflowState.currentStep
     switch (step) {
       case 1:
-        return workflowState.artifacts.videoFile !== null && 
-               workflowState.artifacts.extractedAudio !== null
+        return (
+          workflowState.artifacts.videoFile !== null &&
+          workflowState.artifacts.extractedAudio !== null
+        )
       case 2:
         return workflowState.artifacts.transcriptionSRT !== ''
       case 3:
@@ -122,9 +127,66 @@ export function useWorkflowState() {
     }
   })
 
+  // Helper functions for artifact availability
+  const hasVideoArtifacts = computed(
+    () =>
+      workflowState.artifacts.videoFile !== null ||
+      workflowState.artifacts.extractedAudio !== null
+  )
+
+  const hasAudioArtifacts = computed(
+    () =>
+      workflowState.artifacts.extractedAudio !== null ||
+      workflowState.artifacts.audioFile !== null
+  )
+
+  const hasTranscriptionArtifacts = computed(
+    () =>
+      workflowState.artifacts.transcriptionSRT !== '' &&
+      workflowState.artifacts.transcriptionSegments.length > 0
+  )
+
+  const hasTranslationArtifacts = computed(
+    () =>
+      workflowState.artifacts.translatedSRT !== '' &&
+      workflowState.artifacts.sourceLanguage !== '' &&
+      workflowState.artifacts.targetLanguage !== ''
+  )
+
+  // Ensure artifacts are properly propagated between steps
+  function ensureArtifactContinuity(targetStep: WorkflowStep) {
+    // Step 2: Ensure we have original SRT from transcription if available
+    if (
+      targetStep === 3 &&
+      workflowState.artifacts.transcriptionSRT &&
+      !workflowState.artifacts.originalSRT
+    ) {
+      workflowState.artifacts.originalSRT =
+        workflowState.artifacts.transcriptionSRT
+    }
+
+    // Step 4: Ensure we have video and translated subtitles
+    if (targetStep === 4) {
+      // If no video file but we have extracted audio, we need the original video
+      // This is handled by the UI components, but we track the state
+
+      // Ensure subtitle content is available for merging
+      if (
+        workflowState.artifacts.translatedSRT &&
+        !workflowState.artifacts.translationSegments.length
+      ) {
+        // Parse SRT to segments if needed (this would be handled by the component)
+        console.log(
+          'Step 4: Translated SRT available but segments missing - will be parsed by component'
+        )
+      }
+    }
+  }
+
   // Actions
   function setCurrentStep(step: WorkflowStep) {
     if (canAccessStep.value(step)) {
+      ensureArtifactContinuity(step)
       workflowState.currentStep = step
       saveState()
     }
@@ -139,7 +201,28 @@ export function useWorkflowState() {
   }
 
   function updateArtifacts(updates: Partial<WorkflowArtifacts>) {
-    Object.assign(workflowState.artifacts, updates)
+    // Separate binary and non-binary artifacts
+    const binaryKeys = ['videoFile', 'extractedAudio', 'audioFile', 'finalVideo']
+    const binaryUpdates: any = {}
+    const nonBinaryUpdates: any = {}
+    
+    Object.entries(updates).forEach(([key, value]) => {
+      if (binaryKeys.includes(key)) {
+        binaryUpdates[key] = value
+      } else {
+        nonBinaryUpdates[key] = value
+      }
+    })
+    
+    // Update binary artifacts in memory
+    Object.assign(binaryArtifacts, binaryUpdates)
+    
+    // Update non-binary artifacts in persistent state
+    Object.assign(workflowState.artifacts, nonBinaryUpdates)
+    
+    // Update the main artifacts to include both for components to access
+    Object.assign(workflowState.artifacts, binaryUpdates)
+    
     saveState()
   }
 
@@ -163,6 +246,13 @@ export function useWorkflowState() {
     workflowState.artifacts = { ...defaultArtifacts }
     workflowState.isProcessing = false
     workflowState.lastSaved = null
+    
+    // Clear binary artifacts from memory
+    binaryArtifacts.videoFile = null
+    binaryArtifacts.extractedAudio = null
+    binaryArtifacts.audioFile = null
+    binaryArtifacts.finalVideo = null
+    
     saveState()
   }
 
@@ -186,12 +276,14 @@ export function useWorkflowState() {
           videoFile: null,
           extractedAudio: null,
           audioFile: null,
-          finalVideo: null
+          finalVideo: null,
         },
-        lastSaved: new Date().toISOString()
+        lastSaved: new Date().toISOString(),
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave))
-      workflowState.lastSaved = new Date()
+      // Use nextTick to avoid triggering the watcher that called this function
+      // Or simply don't update the reactive state here since it's mainly for storage
+      // workflowState.lastSaved = new Date()
     } catch (error) {
       console.warn('Failed to save workflow state:', error)
     }
@@ -204,7 +296,7 @@ export function useWorkflowState() {
         const state = JSON.parse(saved)
         workflowState.currentStep = state.currentStep || 1
         workflowState.completedSteps = state.completedSteps || []
-        
+
         // Only restore non-binary artifacts
         Object.assign(workflowState.artifacts, {
           ...defaultArtifacts,
@@ -217,10 +309,16 @@ export function useWorkflowState() {
           targetLanguage: state.artifacts?.targetLanguage || 'es',
           translationSegments: state.artifacts?.translationSegments || [],
           subtitleStyle: state.artifacts?.subtitleStyle || null,
-          outputFormat: state.artifacts?.outputFormat || 'mp4'
+          outputFormat: state.artifacts?.outputFormat || 'mp4',
+          audioFormat: state.artifacts?.audioFormat || 'wav',
         })
         
-        workflowState.lastSaved = state.lastSaved ? new Date(state.lastSaved) : null
+        // Merge binary artifacts from memory
+        Object.assign(workflowState.artifacts, binaryArtifacts)
+
+        workflowState.lastSaved = state.lastSaved
+          ? new Date(state.lastSaved)
+          : null
         console.log('Workflow state loaded from storage')
       }
     } catch (error) {
@@ -240,13 +338,16 @@ export function useWorkflowState() {
   // Initialize state from storage
   loadState()
 
-  // Auto-save on changes
+  // Auto-save on changes (excluding lastSaved to prevent recursion)
   watch(
-    () => ({ ...workflowState }),
+    () => ({
+      currentStep: workflowState.currentStep,
+      completedSteps: [...workflowState.completedSteps],
+      artifacts: { ...workflowState.artifacts },
+      isProcessing: workflowState.isProcessing,
+    }),
     () => {
-      if (workflowState.lastSaved) {
-        saveState()
-      }
+      saveState()
     },
     { deep: true }
   )
@@ -254,13 +355,17 @@ export function useWorkflowState() {
   return {
     // State
     workflowState: readonly(workflowState),
-    
+
     // Computed
     canAccessStep,
     stepProgress,
     nextStep,
     canProceedToNext,
-    
+    hasVideoArtifacts,
+    hasAudioArtifacts,
+    hasTranscriptionArtifacts,
+    hasTranslationArtifacts,
+
     // Actions
     setCurrentStep,
     completeStep,
@@ -269,11 +374,11 @@ export function useWorkflowState() {
     proceedToNext,
     resetWorkflow,
     jumpToStep,
-    
+
     // Persistence
     saveState,
     loadState,
-    clearSavedState
+    clearSavedState,
   }
 }
 
