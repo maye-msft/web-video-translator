@@ -12,6 +12,16 @@
         <p>Current time: {{ new Date().toISOString() }}</p>
         <p>Test Value: {{ testValue }}</p>
       </div>
+      
+      <!-- Test Case 7: Add AudioUpload component -->
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-4">Test AudioUpload Component</h3>
+        <AudioUpload 
+          @file-selected="handleAudioSelected"
+          @file-cleared="handleAudioCleared"
+          :initial-file="uploadedAudioFile"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -75,4 +85,15 @@ const getTranscribeButtonText = computed(() => {
 })
 
 const testValue = ref('All computed properties added - button: ' + getTranscribeButtonText.value)
+
+// Handler functions for AudioUpload
+function handleAudioSelected(file: File) {
+  uploadedAudioFile.value = file
+  console.log('Audio file selected:', file.name)
+}
+
+function handleAudioCleared() {
+  uploadedAudioFile.value = null
+  console.log('Audio file cleared')
+}
 </script>
