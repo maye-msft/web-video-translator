@@ -17,14 +17,21 @@
 </template>
 
 <script setup lang="ts">
-// Test Case 2: Add workflow state
+// Test Case 3: Add whisper utils import (suspected problematic import)
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWorkflowState } from '@/composables/useWorkflowState'
+import {
+  WHISPER_MODELS,
+  generateSRT,
+  downloadSRT,
+  preprocessAudio,
+} from '@/utils/whisper'
 
-console.log('WorkflowStepTest with workflow state loaded at:', new Date().toISOString())
+console.log('WorkflowStepTest with whisper utils loaded at:', new Date().toISOString())
+console.log('Whisper models available:', WHISPER_MODELS.length)
 
 const router = useRouter()
 const { workflowState, updateArtifacts, setProcessing, completeStep } = useWorkflowState()
-const testValue = ref('Workflow state imports working')
+const testValue = ref('Whisper utils imports working - models: ' + WHISPER_MODELS.length)
 </script>
