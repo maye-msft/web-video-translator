@@ -14,5 +14,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     exclude: ['**/e2e/**', '**/node_modules/**'],
+    coverage: {
+      reporter: ['text', 'clover', 'html'],
+    },
   },
 })
