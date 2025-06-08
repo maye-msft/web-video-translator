@@ -6,7 +6,7 @@ import WorkflowStep1 from '../components/WorkflowStep1.vue'
 import WorkflowStep2 from '../components/WorkflowStep2.vue'
 import WorkflowStep3 from '../components/WorkflowStep3.vue'
 import WorkflowStep4 from '../components/WorkflowStep4.vue'
-import WorkflowStepTest from '../components/WorkflowStepTest.vue'
+
 // Keep test pages for development/debugging
 import FFmpegTest from '../components/FFmpegTest.vue'
 import WhisperTest from '../components/WhisperTest.vue'
@@ -61,15 +61,6 @@ const routes = [
     meta: {
       title: 'Merge & Download',
       description: 'Style & merge subtitles',
-    },
-  },
-  {
-    path: '/step-test',
-    name: 'StepTest',
-    component: WorkflowStepTest,
-    meta: {
-      title: 'Test Page',
-      description: 'Minimal test page for debugging',
     },
   },
   // Keep test pages for development (hidden from main navigation)
