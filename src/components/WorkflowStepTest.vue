@@ -1,16 +1,74 @@
 <template>
   <div class="max-w-6xl mx-auto p-6 space-y-6">
     <div class="bg-white rounded-lg shadow-lg p-6">
-      <h1 class="text-2xl font-bold text-gray-900">
-        Step Test: Minimal Page
-      </h1>
+      <!-- Test Case 12: Add WorkflowStep2 Header and Help Section -->
+      <div class="flex items-center justify-between mb-2">
+        <h1 class="text-2xl font-bold text-gray-900">
+          Step Test: Header + Help Section
+        </h1>
+        <button
+          @click="showHelp = !showHelp"
+          class="text-blue-600 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50"
+          title="Show help"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </button>
+      </div>
+
       <p class="text-gray-600 mb-4">
-        This is a minimal test page to isolate loading issues.
+        Convert your audio to text using AI speech recognition. Choose a Whisper
+        model and generate accurate subtitles with timestamps.
       </p>
-      <div class="bg-green-100 p-4 rounded">
+
+      <!-- Help Section -->
+      <div
+        v-if="showHelp"
+        class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+      >
+        <h3 class="text-lg font-semibold text-blue-900 mb-3">Step 2 Guide</h3>
+        <div class="space-y-2 text-sm text-blue-800">
+          <p><strong>What happens in this step:</strong></p>
+          <ul class="list-disc list-inside space-y-1 ml-2">
+            <li>Use AI to convert speech to text</li>
+            <li>Generate SRT subtitle files with precise timing</li>
+            <li>Preview and edit transcription before proceeding</li>
+            <li>Download transcription for backup or external use</li>
+          </ul>
+          <p class="mt-3"><strong>Model Selection:</strong></p>
+          <ul class="list-disc list-inside space-y-1 ml-2">
+            <li>
+              <strong>Tiny:</strong> Fastest, good for clear speech (~39MB)
+            </li>
+            <li><strong>Base:</strong> Balanced speed and accuracy (~74MB)</li>
+            <li><strong>Small:</strong> Better accuracy, slower (~244MB)</li>
+            <li>
+              <strong>Medium:</strong> High accuracy for complex audio (~769MB)
+            </li>
+          </ul>
+          <p class="mt-3">
+            <strong>Tips:</strong> Larger models provide better accuracy but
+            take longer to load and process.
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-green-100 p-4 rounded mb-4">
         <p>If you can see this, the page loaded successfully!</p>
         <p>Current time: {{ new Date().toISOString() }}</p>
         <p>Test Value: {{ testValue }}</p>
+        <p>Show Help: {{ showHelp }}</p>
       </div>
       
       <!-- Test Case 7: Add AudioUpload component -->
@@ -54,11 +112,30 @@ async function getWhisperService() {
 const router = useRouter()
 const { workflowState, updateArtifacts, setProcessing, completeStep } = useWorkflowState()
 
-// Test the computed properties from WorkflowStep2
-const selectedModel = ref(WHISPER_MODELS[0].name)
-const isModelLoading = ref(false)
-const isTranscribing = ref(false)
+// Test all state variables from WorkflowStep2
+const showHelp = ref<boolean>(false)
+const audioSource = ref<string>('upload')
+const srtEditor = ref<HTMLTextAreaElement>()
+const isAutoSaving = ref<boolean>(false)
+const lastSaved = ref<Date | null>(null)
+const validationErrors = ref<string[]>([])
+const autoSaveTimeout = ref<NodeJS.Timeout | null>(null)
 const uploadedAudioFile = ref<File | null>(null)
+const audioURL = ref<string>('')
+const selectedModel = ref<string>(WHISPER_MODELS[0].name)
+const transcriptionSRT = ref<string>('')
+const transcriptionSegments = ref<any[]>([])
+const progressItems = ref<any[]>([])
+const isModelLoading = ref<boolean>(false)
+const modelLoadProgress = ref<number>(0)
+const isAudioProcessing = ref<boolean>(false)
+const audioProcessingProgress = ref<number>(0)
+const isTranscribing = ref<boolean>(false)
+const transcriptionProgress = ref<number>(0)
+const transcriptionStatus = ref<string>('')
+const transcriptionStage = ref<string>('preparing')
+const transcriptionError = ref<string>('')
+const chunkInfo = ref<any | null>(null)
 
 const hasExtractedAudio = computed(
   () => workflowState.artifacts.extractedAudio !== null
@@ -96,4 +173,110 @@ function handleAudioCleared() {
   uploadedAudioFile.value = null
   console.log('Audio file cleared')
 }
+
+// Test Case 9: Add all remaining functions from WorkflowStep2
+function createAudioURL() {
+  console.log('createAudioURL called')
+}
+
+function handleSRTEdit() {
+  console.log('handleSRTEdit called')
+}
+
+function autoSaveSRT() {
+  console.log('autoSaveSRT called')
+}
+
+function handleEditorKeydown(event: KeyboardEvent) {
+  console.log('handleEditorKeydown called')
+}
+
+function getWordCount(): number {
+  return 0
+}
+
+function getTimeAgo(date: Date): string {
+  return 'now'
+}
+
+function validateSRT() {
+  console.log('validateSRT called')
+}
+
+function formatSRT() {
+  console.log('formatSRT called')
+}
+
+function downloadTranscriptionSRT() {
+  console.log('downloadTranscriptionSRT called')
+}
+
+function formatTimestamp(seconds: number): string {
+  return '00:00:00,000'
+}
+
+function getTranscriptionStageText(): string {
+  return 'test stage'
+}
+
+function formatProgressItemName(file: string): string {
+  return file
+}
+
+function goToStep3() {
+  console.log('goToStep3 called')
+}
+
+function parseSRTToSegments(srtContent: string) {
+  return []
+}
+
+function parseTimestamp(timestamp: string): number {
+  return 0
+}
+
+function startTranscriptionWithAutoInit() {
+  console.log('startTranscriptionWithAutoInit called')
+}
+
+function initializeWhisperModel() {
+  console.log('initializeWhisperModel called')
+}
+
+function startTranscription() {
+  console.log('startTranscription called')
+}
+
+// Test Case 10: Add onMounted lifecycle hook
+onMounted(() => {
+  console.log('WorkflowStepTest onMounted called')
+  
+  // Initialize from workflow state (in case we navigated back to this step)
+  if (workflowState.artifacts.audioFile) {
+    uploadedAudioFile.value = workflowState.artifacts.audioFile
+  }
+  if (workflowState.artifacts.selectedWhisperModel) {
+    selectedModel.value = workflowState.artifacts.selectedWhisperModel
+  }
+  if (workflowState.artifacts.transcriptionSRT) {
+    transcriptionSRT.value = workflowState.artifacts.transcriptionSRT
+  }
+  if (workflowState.artifacts.transcriptionSegments) {
+    transcriptionSegments.value =
+      workflowState.artifacts.transcriptionSegments.map(s => ({
+        ...s,
+        timestamp: [s.timestamp[0], s.timestamp[1]] as [number, number],
+      }))
+  }
+
+  createAudioURL()
+})
+
+// Test Case 11: Add onUnmounted lifecycle hook
+onUnmounted(() => {
+  console.log('WorkflowStepTest onUnmounted called')
+  if (audioURL.value) {
+    URL.revokeObjectURL(audioURL.value)
+  }
+})
 </script>
