@@ -144,20 +144,23 @@ export const MARIAN_MODELS = [
 export type MarianModel = (typeof MARIAN_MODELS)[number]
 
 // Translation progress callback type
-export type TranslationProgressCallback = (progress: number) => void
+export type TranslationProgress = {
+  progress: number
+  currentSegment?: number
+  totalSegments?: number
+  message?: string
+}
+export type TranslationProgressCallback = (
+  progress: number | TranslationProgress
+) => void
 
 // Translation result interface
 export interface TranslationResult {
-  originalText: string
-  translatedText: string
+  originalTexts: string[]
+  translatedTexts: string[]
   sourceLanguage: LanguageCode | 'mul'
   targetLanguage: LanguageCode | 'mul'
   modelUsed: string
-  segments?: Array<{
-    original: string
-    translated: string
-    timestamp?: [number, number]
-  }>
 }
 
 // SRT subtitle segment interface

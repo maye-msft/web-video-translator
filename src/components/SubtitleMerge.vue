@@ -37,7 +37,7 @@
             </svg>
             <div class="mt-4">
               <button
-                @click="$refs.videoFileInput.click()"
+                @click="videoFileInput?.click()"
                 class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
                 Choose Video File
@@ -294,7 +294,9 @@
               alt="Subtitle Preview GIF"
               class="max-w-full h-auto rounded"
             />
-            <p class="text-sm text-gray-600 mt-2 text-center">3-second preview GIF with subtitles</p>
+            <p class="text-sm text-gray-600 mt-2 text-center">
+              3-second preview GIF with subtitles
+            </p>
           </div>
         </div>
       </div>
@@ -447,7 +449,6 @@ import SRTInput from '@/components/SRTInput.vue'
 import {
   initializeFFmpeg as initFFmpeg,
   isFFmpegLoaded,
-  mergeSubtitles,
   processVideoWithSubtitles,
   generateSubtitlePreview,
   downloadFile,
@@ -459,6 +460,7 @@ import { formatFileSize } from '@/utils/translation'
 
 // Reactive state
 const videoFile = ref<File | null>(null)
+const videoFileInput = ref<HTMLInputElement>()
 const srtContent = ref<string>('')
 const outputFormat = ref<'mp4' | 'webm'>('mp4')
 const outputFilename = ref<string>('video-with-subtitles')
@@ -502,7 +504,7 @@ const clearVideo = () => {
 }
 
 // Handle SRT content from input component
-const handleSRTContent = (segments: any, rawContent: string) => {
+const handleSRTContent = (_segments: any, rawContent: string) => {
   srtContent.value = rawContent
   previewImage.value = ''
 }

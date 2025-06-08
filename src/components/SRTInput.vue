@@ -103,7 +103,7 @@
             <p class="text-lg text-gray-600">
               Drop your SRT file here, or
               <button
-                @click="$refs.fileInput?.click()"
+                @click="fileInput?.click()"
                 class="text-blue-600 hover:text-blue-700 underline"
               >
                 browse

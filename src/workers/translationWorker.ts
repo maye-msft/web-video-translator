@@ -231,60 +231,41 @@ async function translateTexts(
     // Progress simulation with guaranteed increments
     let progress = 5
     const totalTexts = texts.length
+    let currentSegment = 0
 
     // Send initial progress
-    console.log('Translation worker sending initial progress:', progress)
     self.postMessage({
       type: 'translation-progress',
       requestId,
-      progress,
+      progress: {
+        progress,
+        currentSegment,
+        totalSegments: totalTexts,
+        message: `Preparing translation...`,
+      },
     })
 
     // Use fixed increment that guarantees visible progress
     const progressIncrement = 2 // 2% every 250ms = steady progress
 
-    console.log('Translation progress setup:', {
-      totalTexts,
-      increment: progressIncrement,
-      intervalMs: 250,
-    })
-
-    // Create progress interval that increments gradually
     progressInterval = setInterval(() => {
-      console.log(
-        'Translation progress interval tick - activeRequests:',
-        Array.from(activeRequests),
-        'looking for:',
-        requestId,
-        'has request:',
-        activeRequests.has(requestId),
-        'current progress:',
-        progress
-      )
       if (!activeRequests.has(requestId)) {
-        console.log(
-          'Translation request cancelled or not found, stopping progress interval for:',
-          requestId
-        )
         if (progressInterval) clearInterval(progressInterval)
         return
       }
-
       progress += progressIncrement
       progress = Math.min(progress, 85) // Leave room for final steps
-
-      console.log(
-        'Translation worker sending progress:',
-        Math.round(progress),
-        'for request:',
-        requestId
-      )
       self.postMessage({
         type: 'translation-progress',
         requestId,
-        progress: Math.round(progress),
+        progress: {
+          progress: Math.round(progress),
+          currentSegment,
+          totalSegments: totalTexts,
+          message: `Translating... ${Math.round(progress)}%`,
+        },
       })
-    }, 250) // More frequent updates (every 250ms)
+    }, 250)
 
     // Process texts in batches to avoid memory issues
     const batchSize = Math.min(10, Math.max(1, Math.floor(100 / texts.length)))
@@ -294,9 +275,7 @@ async function translateTexts(
       if (!activeRequests.has(requestId)) {
         return // Request was cancelled
       }
-
       const batch = texts.slice(i, i + batchSize)
-
       try {
         // Translate the batch
         console.log('Translating batch:', {
@@ -358,6 +337,17 @@ async function translateTexts(
         })
 
         translatedTexts.push(...batchTranslations)
+        currentSegment = Math.min(i + batch.length, totalTexts)
+        self.postMessage({
+          type: 'translation-progress',
+          requestId,
+          progress: {
+            progress: Math.round(30 + (currentSegment / totalTexts) * 60),
+            currentSegment,
+            totalSegments: totalTexts,
+            message: `Translating segment ${currentSegment} of ${totalTexts}`,
+          },
+        })
       } catch (batchError) {
         console.error('Batch translation failed:', batchError)
         // Add original text as fallback for failed translations
@@ -375,11 +365,15 @@ async function translateTexts(
     }
 
     // Update progress to show we're finalizing
-    console.log('Translation worker sending progress: 90 (finalizing)')
     self.postMessage({
       type: 'translation-progress',
       requestId,
-      progress: 90,
+      progress: {
+        progress: 90,
+        currentSegment: totalTexts,
+        totalSegments: totalTexts,
+        message: 'Finalizing translation...',
+      },
     })
 
     // Ensure we have the same number of translations as original texts
@@ -388,11 +382,15 @@ async function translateTexts(
     }
 
     // Final progress update
-    console.log('Translation worker sending progress: 100 (complete)')
     self.postMessage({
       type: 'translation-progress',
       requestId,
-      progress: 100,
+      progress: {
+        progress: 100,
+        currentSegment: totalTexts,
+        totalSegments: totalTexts,
+        message: 'Translation complete!',
+      },
     })
 
     console.log('Final translation result:', {

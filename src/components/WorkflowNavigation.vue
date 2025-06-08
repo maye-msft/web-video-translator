@@ -1,22 +1,10 @@
 <template>
   <div class="bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-6xl mx-auto px-4 py-4">
-      <!-- Progress Bar -->
-      <div class="mb-6">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-lg font-semibold text-gray-900">
-            Video Translation Workflow
-          </h2>
-          <span class="text-sm text-gray-500"
-            >{{ stepProgress }}% Complete</span
-          >
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-2">
-          <div
-            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            :style="{ width: stepProgress + '%' }"
-          ></div>
-        </div>
+      <!-- App Title -->
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Web Video Translator</h1>
+        <!-- (Optional: add logo or icon here) -->
       </div>
 
       <!-- Artifacts Status Indicators -->
@@ -62,7 +50,7 @@
             v-if="step.number < 4"
             class="absolute top-5 left-1/2 w-full h-0.5 -z-10"
             :class="
-              completedSteps.includes(step.number + 1)
+              completedSteps.includes((step.number + 1) as WorkflowStep)
                 ? 'bg-blue-600'
                 : 'bg-gray-200'
             "
@@ -71,7 +59,9 @@
           <!-- Step Button -->
           <button
             @click="navigateToStep(step.number)"
-            :disabled="!canAccessStep(step.number) || isProcessing"
+            :disabled="
+              step.number !== 0 && (!canAccessStep(step.number) || isProcessing)
+            "
             class="w-full flex flex-col items-center group"
             :class="getStepButtonClass(step.number)"
           >
@@ -126,7 +116,7 @@
         class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100"
       >
         <button
-          @click="resetWorkflow"
+          @click="showResetModal = true"
           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <svg
@@ -142,73 +132,35 @@
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
           </svg>
-          Start Over
+          Reset All
         </button>
+      </div>
 
-        <div class="flex space-x-3">
-          <button
-            v-if="currentStep > 1"
-            @click="navigateToStep(currentStep - 1)"
-            :disabled="isProcessing"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <!-- Reset Confirmation Modal -->
+      <div
+        v-if="showResetModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+      >
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h3 class="text-lg font-semibold mb-4">Reset All Progress?</h3>
+          <p class="mb-6 text-gray-700">
+            Are you sure you want to reset all progress and uploaded files? This
+            action cannot be undone.
+          </p>
+          <div class="flex justify-end space-x-3">
+            <button
+              @click="showResetModal = false"
+              class="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Previous
-          </button>
-
-          <button
-            v-if="nextStep && canProceedToNext"
-            @click="proceedToNext"
-            :disabled="isProcessing"
-            class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            Next: {{ getStepTitle(nextStep) }}
-            <svg
-              class="w-4 h-4 ml-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              Cancel
+            </button>
+            <button
+              @click="confirmReset"
+              class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-
-          <button
-            v-else-if="currentStep === 4 && completedSteps.includes(4)"
-            class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Workflow Complete!
-          </button>
+              Reset All
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -216,7 +168,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   useWorkflowState,
@@ -227,16 +179,17 @@ const router = useRouter()
 const {
   workflowState,
   canAccessStep,
-  stepProgress,
-  nextStep,
-  canProceedToNext,
-  proceedToNext: proceedToNextStep,
   resetWorkflow: resetWorkflowState,
   jumpToStep,
 } = useWorkflowState()
 
 // Step definitions
 const steps = [
+  {
+    number: 0 as WorkflowStep,
+    title: 'CLI Tools',
+    description: 'ffmpeg, Whisper & ChatGPT',
+  },
   {
     number: 1 as WorkflowStep,
     title: 'Upload Video',
@@ -264,38 +217,38 @@ const currentStep = computed(() => workflowState.currentStep)
 const completedSteps = computed(() => workflowState.completedSteps)
 const isProcessing = computed(() => workflowState.isProcessing)
 
+// Modal state
+const showResetModal = ref(false)
+
 // Methods
 function navigateToStep(step: WorkflowStep) {
+  // Step 0 is always accessible
+  if (step === 0) {
+    jumpToStep(step)
+    router.push('/step-0')
+    return
+  }
   if (canAccessStep.value(step) && !isProcessing.value) {
     jumpToStep(step)
     router.push(`/step-${step}`)
   }
 }
 
-function proceedToNext() {
-  const next = proceedToNextStep()
-  if (next) {
-    router.push(`/step-${next}`)
-  }
-}
-
 function resetWorkflow() {
-  if (
-    confirm(
-      'Are you sure you want to start over? This will clear all progress and uploaded files.'
-    )
-  ) {
-    resetWorkflowState()
-    router.push('/step-1')
-  }
+  resetWorkflowState()
+  router.push('/step-1')
 }
 
-function getStepTitle(step: WorkflowStep): string {
-  return steps.find(s => s.number === step)?.title || ''
+function confirmReset() {
+  showResetModal.value = false
+  resetWorkflow()
 }
 
 function getStepButtonClass(step: WorkflowStep): string {
   const base = 'transition-opacity'
+  if (step === 0) {
+    return base + ' hover:opacity-80 cursor-pointer' // Always clickable
+  }
   if (!canAccessStep.value(step)) {
     return `${base} opacity-50 cursor-not-allowed`
   }

@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto p-6 space-y-6">
+  <div class="max-w-6xl mx-auto p-6 space-y-6">
     <div class="bg-white rounded-lg shadow-lg p-6">
       <div class="flex items-center justify-between mb-2">
         <h1 class="text-2xl font-bold text-gray-900">
@@ -214,16 +214,22 @@
           </button>
 
           <!-- Extraction Progress -->
-          <div v-if="isExtracting" class="mt-4">
-            <div class="flex justify-between text-sm">
+          <div
+            v-if="isExtracting"
+            class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+          >
+            <div class="flex justify-between text-sm font-medium mb-2">
               <span>{{ extractionStatus || 'Extracting audio...' }}</span>
-              <span>{{ extractionProgress }}%</span>
+              <span class="text-blue-600">{{ extractionProgress }}%</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+            <div class="w-full bg-gray-300 rounded-full h-4 shadow-inner">
               <div
-                class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                class="bg-blue-600 h-4 rounded-full transition-all duration-500 shadow-sm"
                 :style="{ width: extractionProgress + '%' }"
               ></div>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">
+              Processing video file...
             </div>
           </div>
 
@@ -329,7 +335,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import VideoUpload from '@/components/VideoUpload.vue'
 import VideoInfo from '@/components/VideoInfo.vue'
@@ -560,17 +566,27 @@ async function initializeFFmpeg() {
 async function extractAudioWithAutoInit() {
   if (!selectedVideo.value) return
 
+  console.log('🎬 Starting audio extraction process...')
+
   // Set initial state
   isExtracting.value = true
   extractionProgress.value = 0
   extractionStatus.value = 'Preparing for extraction...'
   extractionError.value = ''
 
+  console.log('📊 Progress bar state:', {
+    isExtracting: isExtracting.value,
+    progress: extractionProgress.value,
+    status: extractionStatus.value,
+  })
+
   // Force DOM update
   await nextTick()
+  console.log('🔄 DOM updated, progress bar should be visible now')
 
   // Add a small delay to ensure the UI renders
   await new Promise(resolve => setTimeout(resolve, 100))
+  console.log('⏱️ Initial delay complete')
 
   try {
     ffmpegLoading.value = false
@@ -626,6 +642,7 @@ async function extractAudioFromVideo() {
 
         extractionProgress.value = currentProgress
         extractionStatus.value = `Extracting audio... ${currentProgress}%`
+        console.log(`📈 Progress updated: ${currentProgress}%`)
       }
     }, 800) // Update every 800ms for easier observation
 
@@ -645,6 +662,12 @@ async function extractAudioFromVideo() {
       extractedAudio.value = audioData
       extractionStatus.value = 'Extraction complete!'
       extractionProgress.value = 100
+
+      console.log('✅ Audio extraction completed successfully!')
+
+      // Ensure progress bar is visible for at least 2 seconds
+      console.log('⏰ Keeping progress bar visible for 2 seconds...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
       // Create audio URL for preview
       createAudioURL()

@@ -3,7 +3,7 @@ import type { SubtitleSegment } from '@/utils/translation'
 import type { SubtitleStyle } from '@/utils/ffmpeg'
 
 // Workflow step definitions
-export type WorkflowStep = 1 | 2 | 3 | 4
+export type WorkflowStep = 0 | 1 | 2 | 3 | 4
 
 export interface WorkflowArtifacts {
   // Step 1 artifacts
@@ -81,6 +81,8 @@ export function useWorkflowState() {
   // Computed properties
   const canAccessStep = computed(() => (step: WorkflowStep): boolean => {
     switch (step) {
+      case 0:
+        return true // Step 0 (CLI Tools) is always accessible
       case 1:
         return true // Always can access step 1
       case 2:
@@ -111,6 +113,8 @@ export function useWorkflowState() {
   const canProceedToNext = computed(() => {
     const step = workflowState.currentStep
     switch (step) {
+      case 0:
+        return false // Step 0 is informational only
       case 1:
         return (
           workflowState.artifacts.videoFile !== null &&
@@ -186,7 +190,9 @@ export function useWorkflowState() {
   // Actions
   function setCurrentStep(step: WorkflowStep) {
     if (canAccessStep.value(step)) {
-      ensureArtifactContinuity(step)
+      if (step !== 0) {
+        ensureArtifactContinuity(step)
+      }
       workflowState.currentStep = step
       saveState()
     }
@@ -202,10 +208,15 @@ export function useWorkflowState() {
 
   function updateArtifacts(updates: Partial<WorkflowArtifacts>) {
     // Separate binary and non-binary artifacts
-    const binaryKeys = ['videoFile', 'extractedAudio', 'audioFile', 'finalVideo']
+    const binaryKeys = [
+      'videoFile',
+      'extractedAudio',
+      'audioFile',
+      'finalVideo',
+    ]
     const binaryUpdates: any = {}
     const nonBinaryUpdates: any = {}
-    
+
     Object.entries(updates).forEach(([key, value]) => {
       if (binaryKeys.includes(key)) {
         binaryUpdates[key] = value
@@ -213,16 +224,16 @@ export function useWorkflowState() {
         nonBinaryUpdates[key] = value
       }
     })
-    
+
     // Update binary artifacts in memory
     Object.assign(binaryArtifacts, binaryUpdates)
-    
+
     // Update non-binary artifacts in persistent state
     Object.assign(workflowState.artifacts, nonBinaryUpdates)
-    
+
     // Update the main artifacts to include both for components to access
     Object.assign(workflowState.artifacts, binaryUpdates)
-    
+
     saveState()
   }
 
@@ -246,13 +257,13 @@ export function useWorkflowState() {
     workflowState.artifacts = { ...defaultArtifacts }
     workflowState.isProcessing = false
     workflowState.lastSaved = null
-    
+
     // Clear binary artifacts from memory
     binaryArtifacts.videoFile = null
     binaryArtifacts.extractedAudio = null
     binaryArtifacts.audioFile = null
     binaryArtifacts.finalVideo = null
-    
+
     saveState()
   }
 
@@ -312,7 +323,7 @@ export function useWorkflowState() {
           outputFormat: state.artifacts?.outputFormat || 'mp4',
           audioFormat: state.artifacts?.audioFormat || 'wav',
         })
-        
+
         // Merge binary artifacts from memory
         Object.assign(workflowState.artifacts, binaryArtifacts)
 
@@ -335,8 +346,19 @@ export function useWorkflowState() {
     }
   }
 
-  // Initialize state from storage
-  loadState()
+  // Initialize state from storage (but preserve currentStep if it was set by router)
+  function initializeState(preserveCurrentStep = false) {
+    const currentStepBeforeLoad = preserveCurrentStep
+      ? workflowState.currentStep
+      : null
+    loadState()
+    if (preserveCurrentStep && currentStepBeforeLoad !== null) {
+      workflowState.currentStep = currentStepBeforeLoad
+    }
+  }
+
+  // Don't auto-load state immediately - let router set initial step first
+  // loadState()
 
   // Auto-save on changes (excluding lastSaved to prevent recursion)
   watch(
@@ -379,6 +401,7 @@ export function useWorkflowState() {
     saveState,
     loadState,
     clearSavedState,
+    initializeState,
   }
 }
 

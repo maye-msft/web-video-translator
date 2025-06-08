@@ -25,16 +25,18 @@ describe('App.vue', () => {
     const wrapper = mount(App, {
       global: {
         plugins: [router],
+        stubs: {
+          WorkflowNavigation: true,
+        },
       },
     })
 
-    await router.push('/')
+    await router.push('/ffmpeg-test')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('nav').exists()).toBe(true)
+    expect(wrapper.find('header').exists()).toBe(true)
     expect(wrapper.text()).toContain('Web Video Translator')
-    expect(wrapper.text()).toContain('Main App')
-    expect(wrapper.text()).toContain('FFmpeg Test')
+    expect(wrapper.text()).toContain('Development Test Page')
   })
 
   it('contains router-view for page content', async () => {

@@ -84,7 +84,15 @@ describe('Workflow State Management Integration Tests', () => {
 
       // Step 2: Transcription
       const mockSRT = '1\n00:00:00,000 --> 00:00:02,000\nHello world\n'
-      const mockSegments = [{ text: 'Hello world', start: 0, end: 2 }]
+      const mockSegments = [
+        {
+          index: 1,
+          startTime: '00:00:00,000',
+          endTime: '00:00:02,000',
+          text: 'Hello world',
+          timestamp: [0, 2] as [number, number],
+        },
+      ]
 
       updateArtifacts({
         transcriptionSRT: mockSRT,
@@ -98,7 +106,15 @@ describe('Workflow State Management Integration Tests', () => {
 
       // Step 3: Translation
       const mockTranslatedSRT = '1\n00:00:00,000 --> 00:00:02,000\nHola mundo\n'
-      const mockTranslatedSegments = [{ text: 'Hola mundo', start: 0, end: 2 }]
+      const mockTranslatedSegments = [
+        {
+          index: 1,
+          startTime: '00:00:00,000',
+          endTime: '00:00:02,000',
+          text: 'Hola mundo',
+          timestamp: [0, 2] as [number, number],
+        },
+      ]
 
       updateArtifacts({
         translatedSRT: mockTranslatedSRT,
@@ -127,13 +143,13 @@ describe('Workflow State Management Integration Tests', () => {
       const { canAccessStep, updateArtifacts, completeStep } =
         useWorkflowState()
 
-      // Initially, steps 1 and 2 should be accessible (step 2 allows direct access)
+      // All steps should be accessible for better user experience
       expect(canAccessStep.value(1)).toBe(true)
       expect(canAccessStep.value(2)).toBe(true)
-      expect(canAccessStep.value(3)).toBe(false)
-      expect(canAccessStep.value(4)).toBe(false)
+      expect(canAccessStep.value(3)).toBe(true)
+      expect(canAccessStep.value(4)).toBe(true)
 
-      // After completing step 1, step 2 should be accessible
+      // After completing step 1, step 2 should still be accessible
       updateArtifacts({
         videoFile: new File(['video'], 'test.mp4'),
         extractedAudio: new Uint8Array([1, 2, 3]),
@@ -141,19 +157,19 @@ describe('Workflow State Management Integration Tests', () => {
       completeStep(1)
 
       expect(canAccessStep.value(2)).toBe(true)
-      expect(canAccessStep.value(3)).toBe(false)
-      expect(canAccessStep.value(4)).toBe(false)
+      expect(canAccessStep.value(3)).toBe(true)
+      expect(canAccessStep.value(4)).toBe(true)
 
-      // After completing step 2, step 3 should be accessible
+      // After completing step 2, step 3 should still be accessible
       updateArtifacts({
         transcriptionSRT: 'test srt content',
       })
       completeStep(2)
 
       expect(canAccessStep.value(3)).toBe(true)
-      expect(canAccessStep.value(4)).toBe(false)
+      expect(canAccessStep.value(4)).toBe(true)
 
-      // After completing step 3, step 4 should be accessible
+      // After completing step 3, step 4 should still be accessible
       updateArtifacts({
         translatedSRT: 'translated srt content',
       })
@@ -258,9 +274,9 @@ describe('Workflow State Management Integration Tests', () => {
     it('should handle jump to step validation', () => {
       const { jumpToStep, canAccessStep } = useWorkflowState()
 
-      // Should not be able to jump to inaccessible step
-      expect(jumpToStep(3)).toBe(false)
-      expect(canAccessStep.value(3)).toBe(false)
+      // All steps should be accessible now
+      expect(jumpToStep(3)).toBe(true)
+      expect(canAccessStep.value(3)).toBe(true)
 
       // Should be able to jump to accessible step
       expect(jumpToStep(1)).toBe(true)

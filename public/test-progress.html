@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress System Test - Web Video Translator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 16px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .blue { background-color: #3b82f6; }
+        .yellow { background-color: #f59e0b; }
+        .green { background-color: #10b981; }
+        .stage-indicator {
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .stage-loading { background-color: #dbeafe; color: #1e40af; }
+        .stage-processing { background-color: #fef3c7; color: #92400e; }
+        .stage-finalizing { background-color: #d1fae5; color: #065f46; }
+    </style>
+</head>
+<body>
+    <h1>Progress System Test - Web Video Translator</h1>
+    
+    <p>This page demonstrates the multi-stage progress system inspired by whisper-web that solves the Step 2 progress bar hanging issues.</p>
+    
+    <div class="test-section">
+        <h2>1. Model Loading Progress (Blue)</h2>
+        <p>Individual progress bars for each model file being downloaded:</p>
+        
+        <div id="model-progress-items">
+            <div style="margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span>pytorch_model.bin</span>
+                    <span id="model-1-percent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill blue" id="model-1-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span>config.json</span>
+                    <span id="model-2-percent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill blue" id="model-2-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span>preprocessor_config.json</span>
+                    <span id="model-3-percent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill blue" id="model-3-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        <button onclick="simulateModelLoading()">Simulate Model Loading</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Audio Processing Progress (Yellow)</h2>
+        <p>Separate progress for audio preprocessing:</p>
+        
+        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+            <span>Processing audio file...</span>
+            <span id="audio-percent">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill yellow" id="audio-fill" style="width: 0%"></div>
+        </div>
+        <button onclick="simulateAudioProcessing()">Simulate Audio Processing</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Transcription Progress (Green)</h2>
+        <p>Clear transcription-specific progress with stage indicators:</p>
+        
+        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+            <span id="transcription-status">Converting speech to text...</span>
+            <span id="transcription-percent">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill green" id="transcription-fill" style="width: 0%"></div>
+        </div>
+        <div class="stage-indicator stage-loading" id="stage-indicator">Preparing audio for transcription...</div>
+        <br><br>
+        <button onclick="simulateTranscription()">Simulate Transcription</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Key Improvements from whisper-web Analysis</h2>
+        <ul>
+            <li><strong>Multi-Stage Progress:</strong> Separate progress bars for model loading, audio processing, and transcription</li>
+            <li><strong>Progress Item Management:</strong> Individual progress tracking for each model file</li>
+            <li><strong>Stage Change Notifications:</strong> Real-time stage updates with appropriate visual indicators</li>
+            <li><strong>Color-Coded Sections:</strong> Blue for model loading, yellow for audio processing, green for transcription</li>
+            <li><strong>Hybrid Progress Tracking:</strong> Combines simulated progress with real callback data</li>
+            <li><strong>No More Hanging at 5%:</strong> Guaranteed progress movement through all stages</li>
+        </ul>
+    </div>
+
+    <script>
+        function simulateModelLoading() {
+            console.log('Starting model loading simulation...');
+            
+            const files = [
+                { id: 'model-1', name: 'pytorch_model.bin' },
+                { id: 'model-2', name: 'config.json' },
+                { id: 'model-3', name: 'preprocessor_config.json' }
+            ];
+            
+            files.forEach((file, index) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    progress = Math.min(progress, 100);
+                    
+                    document.getElementById(file.id + '-percent').textContent = Math.round(progress) + '%';
+                    document.getElementById(file.id + '-fill').style.width = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                    }
+                }, 200 + index * 100); // Stagger the loading
+            });
+        }
+        
+        function simulateAudioProcessing() {
+            console.log('Starting audio processing simulation...');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                progress = Math.min(progress, 100);
+                
+                document.getElementById('audio-percent').textContent = Math.round(progress) + '%';
+                document.getElementById('audio-fill').style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 150);
+        }
+        
+        function simulateTranscription() {
+            console.log('Starting transcription simulation...');
+            
+            const stages = [
+                { name: 'loading', text: 'Loading audio data...', color: 'stage-loading', maxProgress: 25 },
+                { name: 'processing', text: 'Processing audio segments...', color: 'stage-processing', maxProgress: 70 },
+                { name: 'finalizing', text: 'Finalizing transcription results...', color: 'stage-finalizing', maxProgress: 95 },
+                { name: 'complete', text: 'Transcription complete!', color: 'stage-finalizing', maxProgress: 100 }
+            ];
+            
+            let currentStage = 0;
+            let progress = 5; // Start at 5% (no more hanging!)
+            
+            const interval = setInterval(() => {
+                // Gradual progress increase
+                const increment = currentStage === 0 ? 8 : currentStage === 1 ? 4 : 2;
+                progress += Math.random() * increment;
+                
+                // Check if we should move to next stage
+                if (progress >= stages[currentStage].maxProgress && currentStage < stages.length - 1) {
+                    currentStage++;
+                    console.log(`Stage changed to: ${stages[currentStage].name}`);
+                    
+                    // Update stage indicator
+                    const indicator = document.getElementById('stage-indicator');
+                    indicator.textContent = stages[currentStage].text;
+                    indicator.className = 'stage-indicator ' + stages[currentStage].color;
+                }
+                
+                progress = Math.min(progress, stages[currentStage].maxProgress);
+                
+                document.getElementById('transcription-percent').textContent = Math.round(progress) + '%';
+                document.getElementById('transcription-fill').style.width = progress + '%';
+                document.getElementById('transcription-status').textContent = stages[currentStage].text;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>

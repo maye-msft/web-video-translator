@@ -21,6 +21,6 @@
     },
     "jsx": "preserve"
   },
-  "include": ["src/**/*", "tests/**/*", "*.vue"],
+  "include": ["src/**/*", "tests/**/*", "*.vue", "src/vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "e2e"]
 }

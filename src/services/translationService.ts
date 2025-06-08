@@ -57,6 +57,7 @@ export class TranslationWorkerService {
           case 'translation-progress':
             console.log('Received translation progress:', data.progress)
             if (request.onProgress) {
+              // Forward the full progress object
               ;(request.onProgress as TranslationProgressCallback)(
                 data.progress
               )

@@ -69,13 +69,13 @@
       <!-- Source Content Selection Panel -->
       <div class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Choose Video and Subtitles</h2>
-        
+
         <!-- Combined Source Selection Panel -->
         <div class="bg-gray-50 rounded-lg p-6">
           <!-- Video Selection -->
           <div class="mb-6">
             <h3 class="font-medium text-gray-900 mb-3">Video Source</h3>
-            
+
             <div class="mb-4">
               <div class="flex items-center justify-between mb-3">
                 <label class="flex items-center cursor-pointer">
@@ -90,19 +90,33 @@
                     Use Video from Step 1
                   </span>
                 </label>
-                <div v-if="hasWorkflowVideo" class="flex items-center text-sm text-green-600">
-                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div
+                  v-if="hasWorkflowVideo"
+                  class="flex items-center text-sm text-green-600"
+                >
+                  <svg
+                    class="h-4 w-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   {{ workflowState.artifacts.videoFile?.name }}
                 </div>
               </div>
-              
+
               <div v-if="!hasWorkflowVideo" class="ml-7 text-sm text-gray-500">
-                No video available from Step 1. Complete Step 1 first or upload video below.
+                No video available from Step 1. Complete Step 1 first or upload
+                video below.
               </div>
             </div>
-            
+
             <div>
               <div class="flex items-center mb-3">
                 <label class="flex items-center cursor-pointer">
@@ -117,7 +131,7 @@
                   </span>
                 </label>
               </div>
-              
+
               <div v-if="videoSource === 'upload'" class="ml-7">
                 <VideoUpload
                   @file-selected="handleVideoSelected"
@@ -127,11 +141,11 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Subtitle Selection -->
           <div class="border-t pt-6">
             <h3 class="font-medium text-gray-900 mb-3">Subtitle Source</h3>
-            
+
             <div class="mb-4">
               <div class="flex items-center justify-between mb-3">
                 <label class="flex items-center cursor-pointer">
@@ -146,37 +160,68 @@
                     Use Subtitles from Step 3
                   </span>
                 </label>
-                <div v-if="hasWorkflowSubtitles" class="flex items-center text-sm text-green-600">
-                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div
+                  v-if="hasWorkflowSubtitles"
+                  class="flex items-center text-sm text-green-600"
+                >
+                  <svg
+                    class="h-4 w-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
-                  {{ workflowState.artifacts.sourceLanguage }} → {{ workflowState.artifacts.targetLanguage }}
+                  {{ workflowState.artifacts.sourceLanguage }} →
+                  {{ workflowState.artifacts.targetLanguage }}
                 </div>
               </div>
-              
-              <div v-if="hasWorkflowSubtitles && subtitleSource === 'workflow'" class="ml-7">
+
+              <div
+                v-if="hasWorkflowSubtitles && subtitleSource === 'workflow'"
+                class="ml-7"
+              >
                 <div class="bg-white border rounded-lg p-3">
                   <div class="flex items-center justify-between mb-2">
                     <span class="text-sm text-gray-700">Preview:</span>
                     <button
-                      @click="showWorkflowSubtitlePreview = !showWorkflowSubtitlePreview"
+                      @click="
+                        showWorkflowSubtitlePreview =
+                          !showWorkflowSubtitlePreview
+                      "
                       class="text-xs text-blue-600 hover:text-blue-700"
                     >
-                      {{ showWorkflowSubtitlePreview ? 'Hide' : 'Show' }} Full Content
+                      {{ showWorkflowSubtitlePreview ? 'Hide' : 'Show' }} Full
+                      Content
                     </button>
                   </div>
                   <div class="text-sm text-gray-600">
-                    <pre v-if="showWorkflowSubtitlePreview" class="whitespace-pre-wrap font-mono max-h-32 overflow-y-auto">{{ workflowState.artifacts.translatedSRT }}</pre>
-                    <pre v-else class="whitespace-pre-wrap font-mono">{{ subtitlePreview }}</pre>
+                    <pre
+                      v-if="showWorkflowSubtitlePreview"
+                      class="whitespace-pre-wrap font-mono max-h-32 overflow-y-auto"
+                      >{{ workflowState.artifacts.translatedSRT }}</pre
+                    >
+                    <pre v-else class="whitespace-pre-wrap font-mono">{{
+                      subtitlePreview
+                    }}</pre>
                   </div>
                 </div>
               </div>
-              
-              <div v-if="!hasWorkflowSubtitles" class="ml-7 text-sm text-gray-500">
-                No subtitles available from Step 3. Complete Step 3 first or upload subtitles below.
+
+              <div
+                v-if="!hasWorkflowSubtitles"
+                class="ml-7 text-sm text-gray-500"
+              >
+                No subtitles available from Step 3. Complete Step 3 first or
+                upload subtitles below.
               </div>
             </div>
-            
+
             <div>
               <div class="flex items-center mb-3">
                 <label class="flex items-center cursor-pointer">
@@ -191,19 +236,29 @@
                   </span>
                 </label>
               </div>
-              
+
               <div v-if="subtitleSource === 'upload'" class="ml-7">
                 <p class="text-sm text-gray-600 mb-3">
                   Upload an SRT subtitle file to merge with your video.
                 </p>
                 <SRTInput @content-changed="handleSRTUpload" />
-                
-                <div v-if="uploadedSRTPreview" class="mt-3 bg-white border rounded-lg p-3">
+
+                <div
+                  v-if="uploadedSRTPreview"
+                  class="mt-3 bg-white border rounded-lg p-3"
+                >
                   <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm text-gray-700">Uploaded Content Preview:</span>
-                    <span class="text-xs text-green-600">{{ uploadedSegmentCount }} segments</span>
+                    <span class="text-sm text-gray-700"
+                      >Uploaded Content Preview:</span
+                    >
+                    <span class="text-xs text-green-600"
+                      >{{ uploadedSegmentCount }} segments</span
+                    >
                   </div>
-                  <pre class="text-sm text-gray-600 whitespace-pre-wrap font-mono max-h-24 overflow-y-auto">{{ uploadedSRTPreview }}</pre>
+                  <pre
+                    class="text-sm text-gray-600 whitespace-pre-wrap font-mono max-h-24 overflow-y-auto"
+                    >{{ uploadedSRTPreview }}</pre
+                  >
                 </div>
               </div>
             </div>
@@ -218,7 +273,9 @@
             @click="showStyling = !showStyling"
             class="w-full flex items-center justify-between p-4 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <h2 class="text-lg font-semibold text-gray-900">Subtitle Styling (Optional)</h2>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Subtitle Styling (Optional)
+            </h2>
             <svg
               class="w-5 h-5 text-gray-500 transition-transform"
               :class="{ 'rotate-180': showStyling }"
@@ -226,10 +283,15 @@
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
-          
+
           <div v-if="showStyling" class="p-6 border-t">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <!-- Font Settings -->
@@ -285,8 +347,8 @@
                 </div>
               </div>
 
-          <!-- Colors -->
-          <div class="space-y-4">
+              <!-- Colors -->
+              <div class="space-y-4">
                 <h3 class="font-medium text-gray-700">Colors</h3>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1"
@@ -321,7 +383,9 @@
                     class="w-full"
                   />
                   <span class="text-sm text-gray-500"
-                    >{{ Math.round(subtitleStyle.backgroundOpacity * 100) }}%</span
+                    >{{
+                      Math.round(subtitleStyle.backgroundOpacity * 100)
+                    }}%</span
                   >
                 </div>
                 <div>
@@ -349,10 +413,10 @@
                     >{{ subtitleStyle.outlineWidth }}px</span
                   >
                 </div>
-          </div>
+              </div>
 
-          <!-- Position -->
-          <div class="space-y-4">
+              <!-- Position -->
+              <div class="space-y-4">
                 <h3 class="font-medium text-gray-700">Position</h3>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1"
@@ -489,43 +553,20 @@
         <h2 class="text-lg font-semibold mb-4">Generate Final Video</h2>
         <div class="space-y-4">
           <button
-            @click="processVideo"
-            :disabled="isProcessing || !isFFmpegReady"
+            @click="handleMergeVideo"
+            :disabled="isProcessing"
             class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            {{ isProcessing ? 'Processing...' : 'Merge Subtitles into Video' }}
+            {{
+              isProcessing
+                ? 'Processing...'
+                : !isFFmpegReady
+                  ? ffmpegLoading
+                    ? 'Loading FFmpeg...'
+                    : 'Merge Video'
+                  : 'Merge Subtitles into Video'
+            }}
           </button>
-
-          <!-- FFmpeg Status -->
-          <div
-            v-if="!isFFmpegReady"
-            class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
-          >
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <span class="font-medium">FFmpeg not ready</span>
-            </div>
-            <button
-              @click="initializeFFmpeg"
-              :disabled="ffmpegLoading"
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {{ ffmpegLoading ? 'Loading FFmpeg...' : 'Initialize FFmpeg' }}
-            </button>
-
-            <div v-if="ffmpegLoading && ffmpegLoadProgress > 0" class="mt-2">
-              <div class="flex justify-between text-sm">
-                <span>Loading FFmpeg...</span>
-                <span>{{ ffmpegLoadProgress }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                <div
-                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  :style="{ width: ffmpegLoadProgress + '%' }"
-                ></div>
-              </div>
-            </div>
-          </div>
 
           <!-- Processing Progress -->
           <div v-if="isProcessing" class="space-y-2">
@@ -536,7 +577,7 @@
             <div class="w-full bg-gray-200 rounded-full h-2.5">
               <div
                 class="bg-red-600 h-2.5 rounded-full transition-all duration-300"
-                :style="{ width: processingProgress + '%' }"
+                :style="{ width: Math.min(processingProgress, 100) + '%' }"
               ></div>
             </div>
           </div>
@@ -569,7 +610,7 @@
         </div>
       </div>
 
-      <!-- Simple Completion -->  
+      <!-- Simple Completion -->
       <div v-if="isWorkflowComplete" class="mb-8">
         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
           <div class="flex items-center justify-between">
@@ -628,8 +669,12 @@ const { workflowState, updateArtifacts, setProcessing, completeStep } =
 // UI state
 const showHelp = ref<boolean>(false)
 const showStyling = ref<boolean>(false)
-const videoSource = ref<string>(workflowState.artifacts.videoFile ? 'workflow' : 'upload')
-const subtitleSource = ref<string>(workflowState.artifacts.translatedSRT ? 'workflow' : 'upload')
+const videoSource = ref<string>(
+  workflowState.artifacts.videoFile ? 'workflow' : 'upload'
+)
+const subtitleSource = ref<string>(
+  workflowState.artifacts.translatedSRT ? 'workflow' : 'upload'
+)
 const showWorkflowSubtitlePreview = ref<boolean>(false)
 const uploadedVideoFile = ref<File | null>(null)
 const uploadedSRTPreview = ref<string>('')
@@ -659,15 +704,25 @@ const processingStatus = ref<string>('')
 const processingError = ref<string>('')
 
 // Computed properties
-const hasWorkflowVideo = computed(() => workflowState.artifacts.videoFile !== null)
-const hasWorkflowSubtitles = computed(() => workflowState.artifacts.translatedSRT !== '')
+const hasWorkflowVideo = computed(
+  () => workflowState.artifacts.videoFile !== null
+)
+const hasWorkflowSubtitles = computed(
+  () => workflowState.artifacts.translatedSRT !== ''
+)
 const hasVideoFile = computed(() => {
-  return videoSource.value === 'workflow' ? hasWorkflowVideo.value : uploadedVideoFile.value !== null
+  return videoSource.value === 'workflow'
+    ? hasWorkflowVideo.value
+    : uploadedVideoFile.value !== null
 })
 const hasTranslatedSubtitles = computed(() => {
-  return subtitleSource.value === 'workflow' ? hasWorkflowSubtitles.value : uploadedSRTPreview.value !== ''
+  return subtitleSource.value === 'workflow'
+    ? hasWorkflowSubtitles.value
+    : uploadedSRTPreview.value !== ''
 })
-const hasContentReady = computed(() => hasVideoFile.value && hasTranslatedSubtitles.value)
+const hasContentReady = computed(
+  () => hasVideoFile.value && hasTranslatedSubtitles.value
+)
 
 const subtitlePreview = computed(() => {
   const content = workflowState.artifacts.translatedSRT || ''
@@ -699,17 +754,21 @@ watch(
 )
 
 // Initialize source selections based on workflow state
-watch([hasWorkflowVideo, hasWorkflowSubtitles], () => {
-  if (hasWorkflowVideo.value && videoSource.value === 'upload') {
-    videoSource.value = 'workflow'
-  }
-  if (hasWorkflowSubtitles.value && subtitleSource.value === 'upload') {
-    subtitleSource.value = 'workflow'
-  }
-}, { immediate: true })
+watch(
+  [hasWorkflowVideo, hasWorkflowSubtitles],
+  () => {
+    if (hasWorkflowVideo.value && videoSource.value === 'upload') {
+      videoSource.value = 'workflow'
+    }
+    if (hasWorkflowSubtitles.value && subtitleSource.value === 'upload') {
+      subtitleSource.value = 'workflow'
+    }
+  },
+  { immediate: true }
+)
 
 // Watch for source selection changes
-watch(videoSource, (newSource) => {
+watch(videoSource, newSource => {
   if (newSource === 'workflow' && hasWorkflowVideo.value) {
     updateArtifacts({ videoFile: workflowState.artifacts.videoFile })
   } else if (newSource === 'upload' && uploadedVideoFile.value) {
@@ -717,11 +776,16 @@ watch(videoSource, (newSource) => {
   }
 })
 
-watch(subtitleSource, (newSource) => {
+watch(subtitleSource, newSource => {
   if (newSource === 'workflow' && hasWorkflowSubtitles.value) {
-    updateArtifacts({ 
+    updateArtifacts({
       translatedSRT: workflowState.artifacts.translatedSRT,
-      translationSegments: workflowState.artifacts.translationSegments 
+      translationSegments: workflowState.artifacts.translationSegments
+        ? workflowState.artifacts.translationSegments.map(s => ({
+            ...s,
+            timestamp: [s.timestamp[0], s.timestamp[1]] as [number, number],
+          }))
+        : [],
     })
   } else if (newSource === 'upload' && uploadedSRTPreview.value) {
     // Keep uploaded content - already handled in handleSRTUpload
@@ -744,9 +808,10 @@ function handleVideoCleared() {
 }
 
 function handleSRTUpload(segments: SubtitleSegment[], rawContent: string) {
-  uploadedSRTPreview.value = rawContent.slice(0, 200) + (rawContent.length > 200 ? '...' : '')
+  uploadedSRTPreview.value =
+    rawContent.slice(0, 200) + (rawContent.length > 200 ? '...' : '')
   uploadedSegmentCount.value = segments.length
-  
+
   if (subtitleSource.value === 'upload') {
     updateArtifacts({
       translatedSRT: rawContent,
@@ -885,38 +950,19 @@ async function processVideo() {
   }
 }
 
+async function handleMergeVideo() {
+  if (!isFFmpegReady.value) {
+    await initializeFFmpeg()
+    if (!isFFmpegReady.value) return
+  }
+  await processVideo()
+}
+
 function downloadFinalVideo() {
   if (workflowState.artifacts.finalVideo) {
     const filename = `${outputFilename.value}.${outputFormat.value}`
     const mimeType = outputFormat.value === 'mp4' ? 'video/mp4' : 'video/webm'
     downloadFile(workflowState.artifacts.finalVideo, filename, mimeType)
-  }
-}
-
-function shareResults() {
-  // Simple share functionality - could be enhanced with Web Share API
-  const text = `I just translated a video using Web Video Translator! 🎉\n\nTranslated from ${workflowState.artifacts.sourceLanguage} to ${workflowState.artifacts.targetLanguage} with AI-powered subtitles.`
-
-  if (navigator.share) {
-    navigator
-      .share({
-        title: 'Video Translation Complete!',
-        text: text,
-        url: window.location.href,
-      })
-      .catch(console.error)
-  } else {
-    // Fallback: copy to clipboard
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        alert('Results copied to clipboard! Share it with your friends.')
-      })
-      .catch(() => {
-        alert(
-          'Video translation completed successfully! Share your achievement.'
-        )
-      })
   }
 }
 </script>

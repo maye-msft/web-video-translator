@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whisper Web - Speech Recognition Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 2.5rem;
+        background: linear-gradient(45deg, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #9ca3af;
+        margin-bottom: 30px;
+        font-size: 1.1rem;
+      }
+
+      .upload-area {
+        border: 2px dashed rgba(96, 165, 250, 0.5);
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: rgba(96, 165, 250, 0.05);
+      }
+
+      .upload-area:hover {
+        border-color: #60a5fa;
+        background: rgba(96, 165, 250, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .upload-area.dragover {
+        border-color: #a78bfa;
+        background: rgba(167, 139, 250, 0.2);
+      }
+
+      .upload-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+      }
+
+      .upload-text {
+        color: #e0e7ff;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+      }
+
+      .upload-subtext {
+        color: #9ca3af;
+        font-size: 0.9rem;
+      }
+
+      input[type='file'] {
+        display: none;
+      }
+
+      .file-info {
+        background: rgba(96, 165, 250, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .file-icon {
+        font-size: 2rem;
+      }
+
+      .file-details {
+        flex: 1;
+      }
+
+      .file-name {
+        font-weight: 600;
+        color: #e0e7ff;
+        margin-bottom: 5px;
+      }
+
+      .file-size {
+        color: #9ca3af;
+        font-size: 0.9rem;
+      }
+
+      .progress-container {
+        margin-bottom: 30px;
+        display: none;
+      }
+
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        color: #e0e7ff;
+      }
+
+      .progress-bar-bg {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        height: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .progress-bar {
+        background: linear-gradient(90deg, #60a5fa, #a78bfa);
+        height: 100%;
+        width: 0%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        animation: shimmer 2s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .status-message {
+        text-align: center;
+        color: #60a5fa;
+        margin-top: 15px;
+        font-size: 0.95rem;
+        min-height: 20px;
+      }
+
+      .transcribe-btn {
+        background: linear-gradient(135deg, #60a5fa, #a78bfa);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.3s ease;
+        display: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .transcribe-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -10px rgba(96, 165, 250, 0.5);
+      }
+
+      .transcribe-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .transcribe-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.6s,
+          height 0.6s;
+      }
+
+      .transcribe-btn:active::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .result-container {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 30px;
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .result-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #e0e7ff;
+      }
+
+      .copy-btn {
+        background: rgba(96, 165, 250, 0.2);
+        border: 1px solid rgba(96, 165, 250, 0.3);
+        color: #60a5fa;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+      }
+
+      .copy-btn:hover {
+        background: rgba(96, 165, 250, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .result-text {
+        color: #f3f4f6;
+        line-height: 1.6;
+        font-size: 1.05rem;
+        word-wrap: break-word;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 10px;
+      }
+
+      .result-text::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .result-text::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+
+      .result-text::-webkit-scrollbar-thumb {
+        background: rgba(96, 165, 250, 0.3);
+        border-radius: 3px;
+      }
+
+      .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        display: none;
+        text-align: center;
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 30px 20px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .upload-area {
+          padding: 30px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎙️ Whisper Web</h1>
+      <p class="subtitle">ML-powered speech recognition in your browser</p>
+
+      <div class="upload-area" id="uploadArea">
+        <span class="upload-icon">📁</span>
+        <p class="upload-text">Drop your audio file here or click to upload</p>
+        <p class="upload-subtext">Supports MP3, WAV, M4A, and more</p>
+        <input type="file" id="fileInput" accept="audio/*" />
+      </div>
+
+      <div class="file-info" id="fileInfo">
+        <span class="file-icon">🎵</span>
+        <div class="file-details">
+          <div class="file-name" id="fileName"></div>
+          <div class="file-size" id="fileSize"></div>
+        </div>
+      </div>
+
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-label">
+          <span id="progressStage">Initializing...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="status-message" id="statusMessage"></div>
+      </div>
+
+      <button class="transcribe-btn" id="transcribeBtn">
+        🚀 Start Transcription
+      </button>
+
+      <div class="result-container" id="resultContainer">
+        <div class="result-header">
+          <h3 class="result-title">Transcription Result</h3>
+          <button class="copy-btn" id="copyBtn">📋 Copy</button>
+        </div>
+        <div class="result-text" id="resultText"></div>
+      </div>
+
+      <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script type="module">
+      // Create Web Worker for better performance and real progress tracking
+      const workerCode = `
+            import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+            
+            env.allowRemoteModels = true;
+            
+            let transcriber = null;
+            
+            self.addEventListener('message', async (e) => {
+                const { type, audio } = e.data;
+                
+                if (type === 'transcribe') {
+                    try {
+                        // Send initial progress
+                        self.postMessage({
+                            type: 'progress',
+                            progress: 0,
+                            stage: 'Initializing model...',
+                            message: 'Preparing Whisper for transcription'
+                        });
+                        
+                        // Load model with progress tracking
+                        if (!transcriber) {
+                            transcriber = await pipeline(
+                                'automatic-speech-recognition',
+                                'Xenova/whisper-tiny.en',
+                                {
+                                    progress_callback: (progress) => {
+                                        if (progress.status === 'progress') {
+                                            const percent = Math.round(progress.progress);
+                                            self.postMessage({
+                                                type: 'progress',
+                                                progress: percent,
+                                                stage: 'Loading model...',
+                                                message: \`Downloading \${progress.file} (\${Math.round(progress.loaded / 1024 / 1024)}MB / \${Math.round(progress.total / 1024 / 1024)}MB)\`
+                                            });
+                                        }
+                                    }
+                                }
+                            );
+                        }
+                        
+                        // Model loaded, start transcription
+                        self.postMessage({
+                            type: 'progress',
+                            progress: 100,
+                            stage: 'Model ready',
+                            message: 'Starting transcription...'
+                        });
+                        
+                        // Small delay for UI
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        // Reset progress for transcription phase
+                        self.postMessage({
+                            type: 'progress',
+                            progress: 0,
+                            stage: 'Transcribing...',
+                            message: 'Processing audio chunks'
+                        });
+                        
+                        // Transcribe with chunk tracking
+                        const startTime = Date.now();
+                        let lastProgress = 0;
+                        
+                        const output = await transcriber(audio, {
+                            chunk_length_s: 30,
+                            return_timestamps: true,
+                            callback_function: (beams) => {
+                                // This callback is called during generation
+                                const elapsed = Date.now() - startTime;
+                                const progress = Math.min(Math.round(elapsed / 100), 90);
+                                
+                                if (progress > lastProgress) {
+                                    lastProgress = progress;
+                                    self.postMessage({
+                                        type: 'progress',
+                                        progress: progress,
+                                        stage: 'Transcribing...',
+                                        message: 'Processing speech...'
+                                    });
+                                }
+                            }
+                        });
+                        
+                        // Complete
+                        self.postMessage({
+                            type: 'progress',
+                            progress: 100,
+                            stage: 'Complete',
+                            message: 'Transcription finished!'
+                        });
+                        
+                        // Send result
+                        self.postMessage({
+                            type: 'complete',
+                            text: output.text
+                        });
+                        
+                    } catch (error) {
+                        self.postMessage({
+                            type: 'error',
+                            error: error.message
+                        });
+                    }
+                }
+            });
+        `
+
+      // Create blob URL for worker
+      const blob = new Blob([workerCode], { type: 'application/javascript' })
+      const workerUrl = URL.createObjectURL(blob)
+
+      let worker = null
+      let audioFile = null
+      let isTranscribing = false
+
+      const uploadArea = document.getElementById('uploadArea')
+      const fileInput = document.getElementById('fileInput')
+      const fileInfo = document.getElementById('fileInfo')
+      const fileName = document.getElementById('fileName')
+      const fileSize = document.getElementById('fileSize')
+      const transcribeBtn = document.getElementById('transcribeBtn')
+      const progressContainer = document.getElementById('progressContainer')
+      const progressBar = document.getElementById('progressBar')
+      const progressPercent = document.getElementById('progressPercent')
+      const progressStage = document.getElementById('progressStage')
+      const statusMessage = document.getElementById('statusMessage')
+      const resultContainer = document.getElementById('resultContainer')
+      const resultText = document.getElementById('resultText')
+      const copyBtn = document.getElementById('copyBtn')
+      const errorMessage = document.getElementById('errorMessage')
+
+      // Initialize worker
+      function initWorker() {
+        if (worker) {
+          worker.terminate()
+        }
+
+        worker = new Worker(workerUrl, { type: 'module' })
+
+        worker.addEventListener('message', e => {
+          const { type } = e.data
+
+          if (type === 'progress') {
+            const { progress, stage, message } = e.data
+            console.log(`📈 Transcription progress: ${progress}%`)
+            if (stage) {
+              console.log(`🔄 Transcription stage: ${stage}`)
+            }
+            if (message) {
+              console.log(`ℹ️  Status message: ${message}`)
+            }
+            updateProgress(progress, stage, message)
+          } else if (type === 'complete') {
+            const { text } = e.data
+            console.log('✅ Transcription complete')
+            displayResult(text)
+          } else if (type === 'error') {
+            const { error } = e.data
+            console.error('❌ Transcription failed:', error)
+            showError('Transcription failed: ' + error)
+            resetUI()
+          }
+        })
+      }
+
+      // File upload handling
+      uploadArea.addEventListener('click', () => fileInput.click())
+
+      uploadArea.addEventListener('dragover', e => {
+        e.preventDefault()
+        uploadArea.classList.add('dragover')
+      })
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover')
+      })
+
+      uploadArea.addEventListener('drop', e => {
+        e.preventDefault()
+        uploadArea.classList.remove('dragover')
+        const files = e.dataTransfer.files
+        if (files.length > 0) {
+          handleFile(files[0])
+        }
+      })
+
+      fileInput.addEventListener('change', e => {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0])
+        }
+      })
+
+      function handleFile(file) {
+        if (!file.type.startsWith('audio/')) {
+          showError('Please upload an audio file')
+          return
+        }
+
+        audioFile = file
+        fileName.textContent = file.name
+        fileSize.textContent = formatFileSize(file.size)
+        fileInfo.style.display = 'flex'
+        transcribeBtn.style.display = 'block'
+        hideError()
+        resultContainer.style.display = 'none'
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B'
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+      }
+
+      function updateProgress(percent, stage = null, message = null) {
+        progressBar.style.width = percent + '%'
+        progressPercent.textContent = percent + '%'
+
+        if (stage) {
+          progressStage.textContent = stage
+        }
+
+        if (message) {
+          statusMessage.textContent = message
+        }
+      }
+
+      function showError(message) {
+        errorMessage.textContent = message
+        errorMessage.style.display = 'block'
+      }
+
+      function hideError() {
+        errorMessage.style.display = 'none'
+      }
+
+      function displayResult(text) {
+        progressContainer.style.display = 'none'
+        resultContainer.style.display = 'block'
+        resultText.textContent = text.trim()
+        resetUI()
+      }
+
+      function resetUI() {
+        isTranscribing = false
+        transcribeBtn.disabled = false
+        transcribeBtn.textContent = '🚀 Start Transcription'
+      }
+
+      async function transcribeAudio() {
+        if (!audioFile || isTranscribing) return
+
+        isTranscribing = true
+        transcribeBtn.disabled = true
+        transcribeBtn.textContent = '⏳ Transcribing...'
+        progressContainer.style.display = 'block'
+        resultContainer.style.display = 'none'
+        hideError()
+
+        try {
+          // Initialize worker if needed
+          if (!worker) {
+            initWorker()
+          }
+
+          // Convert file to URL
+          const audioUrl = URL.createObjectURL(audioFile)
+
+          // Send audio to worker
+          worker.postMessage({
+            type: 'transcribe',
+            audio: audioUrl,
+          })
+        } catch (error) {
+          console.error('Transcription error:', error)
+          showError('An error occurred during transcription. Please try again.')
+          resetUI()
+        }
+      }
+
+      // Transcribe button click
+      transcribeBtn.addEventListener('click', transcribeAudio)
+
+      // Copy button functionality
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(resultText.textContent)
+          const originalText = copyBtn.textContent
+          copyBtn.textContent = '✅ Copied!'
+          setTimeout(() => {
+            copyBtn.textContent = originalText
+          }, 2000)
+        } catch (error) {
+          showError('Failed to copy to clipboard')
+        }
+      })
+
+      // Initialize worker on load
+      initWorker()
+    </script>
+  </body>
+</html>

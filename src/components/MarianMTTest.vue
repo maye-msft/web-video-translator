@@ -260,7 +260,7 @@
                 class="max-h-80 overflow-y-auto border rounded-md p-3 bg-gray-50"
               >
                 <div
-                  v-for="(subtitle, index) in parsedSubtitles.slice(0, 10)"
+                  v-for="subtitle in parsedSubtitles.slice(0, 10)"
                   :key="subtitle.index"
                   class="mb-3 text-sm"
                 >
@@ -367,10 +367,9 @@ import SRTInput from './SRTInput.vue'
 import { translationService } from '../services/translationService'
 import {
   SUPPORTED_LANGUAGES,
-  MARIAN_MODELS,
   type MarianModel,
   type SubtitleSegment,
-  parseSRT,
+  type LanguageCode,
   generateTranslatedSRT,
   getTranslationCacheInfo,
   clearTranslationCache,
@@ -378,6 +377,8 @@ import {
   downloadTranslatedSRT as downloadSRT,
   findModelsForLanguagePair,
 } from '../utils/translation'
+
+type SupportedLanguage = LanguageCode
 
 // Reactive state
 const sourceLanguage = ref('')
@@ -416,8 +417,8 @@ const canTranslate = computed(() => {
 const updateAvailableModels = () => {
   if (sourceLanguage.value && targetLanguage.value) {
     availableModels.value = findModelsForLanguagePair(
-      sourceLanguage.value,
-      targetLanguage.value
+      sourceLanguage.value as SupportedLanguage,
+      targetLanguage.value as SupportedLanguage
     )
     selectedModelId.value =
       availableModels.value.length > 0 ? availableModels.value[0].id : ''
@@ -438,8 +439,8 @@ const loadModel = async () => {
       selectedModelId.value,
       progress => {
         modelProgress.value = {
-          progress,
-          message: `Loading model... ${progress}%`,
+          progress: typeof progress === 'number' ? progress : progress.progress,
+          message: `Loading model... ${typeof progress === 'number' ? progress : progress.progress}%`,
         }
       }
     )
@@ -460,7 +461,7 @@ const loadModel = async () => {
   }
 }
 
-const handleSRTLoaded = (segments: SubtitleSegment[], rawContent: string) => {
+const handleSRTLoaded = (segments: SubtitleSegment[]) => {
   parsedSubtitles.value = segments
   translationResult.value = null
 }
@@ -482,16 +483,18 @@ const translateSubtitles = async () => {
     const result = await translationService.translateText(
       texts,
       {
-        sourceLanguage: sourceLanguage.value,
-        targetLanguage: targetLanguage.value,
+        sourceLanguage: sourceLanguage.value as string,
+        targetLanguage: targetLanguage.value as string,
         maxLength: 512,
       },
       progress => {
         translationProgress.value = {
-          progress,
-          message: `Translating... ${progress}%`,
+          progress: typeof progress === 'number' ? progress : progress.progress,
+          message: `Translating... ${typeof progress === 'number' ? progress : progress.progress}%`,
           currentSegment: Math.round(
-            (progress / 100) * parsedSubtitles.value.length
+            ((typeof progress === 'number' ? progress : progress.progress) /
+              100) *
+              parsedSubtitles.value.length
           ),
           totalSegments: parsedSubtitles.value.length,
         }
@@ -521,14 +524,6 @@ const downloadTranslatedSRT = () => {
     translationResult.value.translatedTexts
   )
 
-  const sourceLanguageName =
-    SUPPORTED_LANGUAGES[
-      sourceLanguage.value as keyof typeof SUPPORTED_LANGUAGES
-    ]
-  const targetLanguageName =
-    SUPPORTED_LANGUAGES[
-      targetLanguage.value as keyof typeof SUPPORTED_LANGUAGES
-    ]
   const filename = `translated-${sourceLanguage.value}-to-${targetLanguage.value}-subtitles.srt`
 
   downloadSRT(translatedSRTContent, filename)

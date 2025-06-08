@@ -5,6 +5,25 @@ import {
   type TranscriptionProgressCallback,
 } from '../utils/whisper'
 
+// Progress tracking types inspired by whisper-web
+export interface ProgressItem {
+  file: string
+  name: string
+  progress: number
+  loaded: number
+  total: number
+  status: string
+}
+
+export type StageChangeCallback = (stage: string) => void
+export type ProgressItemsCallback = (items: ProgressItem[]) => void
+export type ChunkProgressCallback = (chunkInfo: {
+  currentChunk: number
+  totalChunks: number
+  chunkProgress: number
+  chunkText?: string
+}) => void
+
 export class WhisperWorkerService {
   private worker: Worker | null = null
   private requestId = 0
@@ -14,8 +33,12 @@ export class WhisperWorkerService {
       resolve: (value: any) => void
       reject: (error: Error) => void
       onProgress?: ModelProgressCallback | TranscriptionProgressCallback
+      onStageChange?: StageChangeCallback
+      onProgressItems?: ProgressItemsCallback
+      onChunkProgress?: ChunkProgressCallback
     }
   >()
+  private progressItems: ProgressItem[] = []
   private currentModelName: string | null = null
   private modelLoaded = false
   private currentTranscriptionId: string | null = null
@@ -48,17 +71,37 @@ export class WhisperWorkerService {
 
         switch (type) {
           case 'progress':
+            // Handle model loading progress
             if (request.onProgress) {
               ;(request.onProgress as ModelProgressCallback)(data.progress)
             }
             break
+            
+          case 'progress-items':
+            // Handle progress items (whisper-web style)
+            this.progressItems = data.items || []
+            if (request.onProgressItems) {
+              request.onProgressItems(this.progressItems)
+            }
+            break
 
           case 'transcription-progress':
-            console.log('Received transcription progress:', data.progress)
+            console.log('Received transcription progress:', data.progress, data.chunkInfo)
             if (request.onProgress) {
               ;(request.onProgress as TranscriptionProgressCallback)(
                 data.progress
               )
+            }
+            // Handle chunk information if available
+            if (request.onChunkProgress && data.chunkInfo) {
+              request.onChunkProgress(data.chunkInfo)
+            }
+            break
+            
+          case 'stage-change':
+            console.log('Transcription stage changed:', data.stage)
+            if (request.onStageChange) {
+              request.onStageChange(data.stage)
             }
             break
 
@@ -99,9 +142,15 @@ export class WhisperWorkerService {
     }
   }
 
+  // Get current progress items for UI display
+  getProgressItems(): ProgressItem[] {
+    return [...this.progressItems]
+  }
+
   async initializeWhisper(
     modelName: string = 'Xenova/whisper-small',
-    onProgress?: ModelProgressCallback
+    onProgress?: ModelProgressCallback,
+    onProgressItems?: ProgressItemsCallback
   ): Promise<string> {
     if (!this.worker) {
       throw new Error('Worker not available')
@@ -114,10 +163,14 @@ export class WhisperWorkerService {
     return new Promise((resolve, reject) => {
       const id = `init-${++this.requestId}`
 
+      // Clear previous progress items
+      this.progressItems = []
+
       this.pendingRequests.set(id, {
         resolve,
         reject,
         onProgress,
+        onProgressItems,
       })
 
       this.modelLoaded = false
@@ -138,7 +191,9 @@ export class WhisperWorkerService {
       return_timestamps?: boolean
       chunk_length_s?: number
     } = {},
-    onProgress?: TranscriptionProgressCallback
+    onProgress?: TranscriptionProgressCallback,
+    onStageChange?: StageChangeCallback,
+    onChunkProgress?: ChunkProgressCallback
   ): Promise<TranscriptionResult> {
     if (!this.worker) {
       throw new Error('Worker not available')
@@ -164,6 +219,8 @@ export class WhisperWorkerService {
           reject(error)
         },
         onProgress,
+        onStageChange,
+        onChunkProgress,
       })
 
       this.worker!.postMessage({
