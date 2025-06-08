@@ -1,10 +1,9 @@
 <template>
   <div class="max-w-6xl mx-auto p-6 space-y-6">
     <div class="bg-white rounded-lg shadow-lg p-6">
-      <!-- Test Case 12: Add WorkflowStep2 Header and Help Section -->
       <div class="flex items-center justify-between mb-2">
         <h1 class="text-2xl font-bold text-gray-900">
-          Step Test: Header + Help Section
+          Step 2: Generate Subtitles
         </h1>
         <button
           @click="showHelp = !showHelp"
@@ -26,12 +25,10 @@
           </svg>
         </button>
       </div>
-
       <p class="text-gray-600 mb-4">
         Convert your audio to text using AI speech recognition. Choose a Whisper
         model and generate accurate subtitles with timestamps.
       </p>
-
       <!-- Help Section -->
       <div
         v-if="showHelp"
@@ -63,12 +60,9 @@
           </p>
         </div>
       </div>
-
       <!-- Audio Source Section -->
       <div class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Audio Source</h2>
-
-        <!-- Unified Audio Source Selection Panel -->
         <div class="bg-gray-50 rounded-lg p-6">
           <!-- Option 1: Use Audio from Step 1 -->
           <div class="mb-4">
@@ -110,13 +104,11 @@
                 }}
               </div>
             </div>
-
             <div v-if="!hasExtractedAudio" class="ml-7 text-sm text-gray-500">
               No audio available from Step 1. Complete Step 1 first or upload
               audio below.
             </div>
           </div>
-
           <!-- Option 2: Upload Audio File -->
           <div>
             <div class="flex items-center mb-3">
@@ -132,7 +124,6 @@
                 </span>
               </label>
             </div>
-
             <div v-if="audioSource === 'upload'" class="ml-7">
               <p class="text-sm text-gray-600 mb-3">
                 Upload your own audio file for transcription. Supported formats:
@@ -147,7 +138,6 @@
           </div>
         </div>
       </div>
-
       <!-- Model Selection -->
       <div v-if="hasAudioSource" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Choose Whisper Model</h2>
@@ -167,8 +157,6 @@
               {{ model.displayName }} ({{ model.size }})
             </option>
           </select>
-
-          <!-- Selected Model Description -->
           <div v-if="selectedModelInfo" class="mt-3 p-3 bg-gray-50 rounded-lg">
             <h4 class="text-sm font-medium text-gray-900 mb-1">
               {{ selectedModelInfo.displayName }}
@@ -182,29 +170,10 @@
           </div>
         </div>
       </div>
-
-      <div class="bg-green-100 p-4 rounded mb-4">
-        <p>If you can see this, the page loaded successfully!</p>
-        <p>Current time: {{ new Date().toISOString() }}</p>
-        <p>Test Value: {{ testValue }}</p>
-        <p>Show Help: {{ showHelp }}</p>
-      </div>
-      
-      <!-- Test Case 7: Add AudioUpload component -->
-      <div class="mt-6">
-        <h3 class="text-lg font-semibold mb-4">Test AudioUpload Component</h3>
-        <AudioUpload 
-          @file-selected="handleAudioSelected"
-          @file-cleared="handleAudioCleared"
-          :initial-file="uploadedAudioFile"
-        />
-      </div>
-
       <!-- Transcription Section -->
       <div v-if="hasAudioSource && selectedModel" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Generate Transcription</h2>
         <div class="bg-gray-50 rounded-lg p-6">
-          <!-- Generate Subtitles Button (with automatic model initialization) -->
           <button
             @click="startTranscriptionWithAutoInit"
             :disabled="isTranscribing || isModelLoading"
@@ -212,233 +181,123 @@
           >
             {{ getTranscribeButtonText }}
           </button>
-
-          <!-- Multi-Stage Progress System (inspired by whisper-web) -->
-
-          <!-- Model Loading Progress Items -->
-          <div
-            v-if="progressItems.length > 0"
-            class="mb-4 space-y-2"
-            data-testid="progress-items"
-          >
+          <div v-if="progressItems.length > 0" class="mb-4 space-y-2" data-testid="progress-items">
             <div class="text-sm font-medium text-gray-700 mb-2">
               Loading model files... (only runs once)
             </div>
-            <div
-              v-for="item in progressItems"
-              :key="item.file"
-              class="bg-blue-50 rounded-lg p-3"
-            >
+            <div v-for="item in progressItems" :key="item.file" class="bg-blue-50 rounded-lg p-3">
               <div class="flex justify-between text-xs mb-1">
                 <span class="text-blue-800">{{ item.name || item.file }}</span>
-                <span class="text-blue-600"
-                  >{{ Math.round(item.progress) }}%</span
-                >
+                <span class="text-blue-600">{{ Math.round(item.progress) }}%</span>
               </div>
               <div class="w-full bg-blue-200 rounded-full h-2">
-                <div
-                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  :style="{ width: item.progress + '%' }"
-                ></div>
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="{ width: item.progress + '%' }"></div>
               </div>
             </div>
           </div>
-
-          <!-- Audio Processing Progress -->
-          <div
-            v-if="isAudioProcessing"
-            class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-            data-testid="audio-processing"
-          >
+          <div v-if="isAudioProcessing" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg" data-testid="audio-processing">
             <div class="flex justify-between text-sm font-medium mb-2">
               <span class="text-yellow-800">Processing audio file...</span>
-              <span class="text-yellow-600"
-                >{{ audioProcessingProgress }}%</span
-              >
+              <span class="text-yellow-600">{{ audioProcessingProgress }}%</span>
             </div>
             <div class="w-full bg-yellow-200 rounded-full h-3">
-              <div
-                class="bg-yellow-600 h-3 rounded-full transition-all duration-300"
-                :style="{ width: audioProcessingProgress + '%' }"
-              ></div>
+              <div class="bg-yellow-600 h-3 rounded-full transition-all duration-300" :style="{ width: audioProcessingProgress + '%' }"></div>
             </div>
           </div>
-
-          <!-- Transcription Progress -->
-          <div
-            v-if="isTranscribing"
-            class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg"
-            data-testid="transcription-progress"
-          >
+          <div v-if="isTranscribing" class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg" data-testid="transcription-progress">
             <div class="flex justify-between text-sm font-medium mb-2">
               <span class="text-green-800">{{ transcriptionStatus }}</span>
               <span class="text-green-600">{{ transcriptionProgress }}%</span>
             </div>
-
-            <!-- Main Progress Bar -->
             <div class="w-full bg-green-200 rounded-full h-4 shadow-inner mb-3">
-              <div
-                class="bg-green-600 h-4 rounded-full transition-all duration-500 shadow-sm"
-                :style="{ width: transcriptionProgress + '%' }"
-              ></div>
+              <div class="bg-green-600 h-4 rounded-full transition-all duration-500 shadow-sm" :style="{ width: transcriptionProgress + '%' }"></div>
             </div>
-
-            <!-- Chunk Progress Details -->
             <div v-if="chunkInfo" class="space-y-2">
               <div class="flex justify-between text-xs text-green-700">
                 <span>Processing chunks:</span>
-                <span
-                  >{{ chunkInfo.currentChunk }} /
-                  {{ chunkInfo.totalChunks }}</span
-                >
+                <span>{{ chunkInfo.currentChunk }} / {{ chunkInfo.totalChunks }}</span>
               </div>
-
-              <!-- Individual Chunk Progress -->
               <div class="w-full bg-green-100 rounded-full h-2">
-                <div
-                  class="bg-green-500 h-2 rounded-full transition-all duration-300"
-                  :style="{ width: chunkInfo.chunkProgress + '%' }"
-                ></div>
+                <div class="bg-green-500 h-2 rounded-full transition-all duration-300" :style="{ width: chunkInfo.chunkProgress + '%' }"></div>
               </div>
-
-              <!-- Current Chunk Text Preview -->
-              <div
-                v-if="chunkInfo.chunkText"
-                class="text-xs text-green-600 italic truncate"
-              >
-                Current: "{{ chunkInfo.chunkText.slice(0, 60)
-                }}{{ chunkInfo.chunkText.length > 60 ? '...' : '' }}"
+              <div v-if="chunkInfo.chunkText" class="text-xs text-green-600 italic truncate">
+                Current: "{{ chunkInfo.chunkText.slice(0, 60) }}{{ chunkInfo.chunkText.length > 60 ? '...' : '' }}"
               </div>
             </div>
-
             <div class="text-xs text-green-700 mt-2">
               {{ getTranscriptionStageText() }}
             </div>
           </div>
-
-          <!-- Error Display -->
-          <div
-            v-if="transcriptionError"
-            class="mb-4 bg-red-50 border border-red-200 rounded-md p-3"
-          >
+          <div v-if="transcriptionError" class="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
             <div class="flex">
-              <svg
-                class="h-5 w-5 text-red-400"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clip-rule="evenodd"
-                />
+              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
               <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">
-                  Transcription Error
-                </h3>
-                <p class="mt-1 text-sm text-red-700">
-                  {{ transcriptionError }}
-                </p>
+                <h3 class="text-sm font-medium text-red-800">Transcription Error</h3>
+                <p class="mt-1 text-sm text-red-700">{{ transcriptionError }}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       <!-- Transcription Results -->
       <div v-if="transcriptionSRT" class="mb-8">
         <h2 class="text-lg font-semibold mb-4">Transcription Results</h2>
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center">
-              <svg
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 24 24"
-                class="h-5 w-5 text-green-600 mr-2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              <svg class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span class="text-sm font-medium text-green-800">
-                Transcription complete
-              </span>
+              <span class="text-sm font-medium text-green-800">Transcription complete ({{ transcriptionSegments.length }} segments)</span>
             </div>
-            <button
-              @click="downloadTranscriptionSRT"
-              class="text-sm text-blue-600 hover:text-blue-700 underline"
-            >
-              Download SRT
-            </button>
+            <button @click="downloadTranscriptionSRT" class="text-sm text-blue-600 hover:text-blue-700 underline">Download SRT</button>
           </div>
         </div>
-
-        <!-- Subtitle Editor -->
         <div class="border rounded-lg">
           <div class="p-4 border-b bg-gray-50">
             <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-700">Edit Subtitles (SRT)</span>
-              <span class="text-xs text-gray-500">Word count: {{ getWordCount() }}</span>
+              <h3 class="font-medium">Subtitle Editor</h3>
+              <div class="flex items-center space-x-3">
+                <span class="text-xs text-gray-500">{{ transcriptionSegments.length }} segments | {{ getWordCount() }} words</span>
+                <button @click="validateSRT" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">Validate</button>
+                <button @click="formatSRT" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">Format</button>
+              </div>
             </div>
           </div>
           <div class="relative">
-            <textarea
-              ref="srtEditor"
-              v-model="transcriptionSRT"
-              @input="handleSRTEdit"
-              @keydown="handleEditorKeydown"
-              rows="12"
-              class="w-full p-4 text-sm border-0 rounded-b-lg focus:ring-2 focus:ring-blue-500 bg-white font-mono resize-y"
-              spellcheck="true"
-            ></textarea>
-
-            <!-- Auto-save indicator -->
-            <div
-              v-if="isAutoSaving"
-              class="absolute top-2 right-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded"
-            >
-              Saving...
-            </div>
-            <div
-              v-else-if="lastSaved"
-              class="absolute top-2 right-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded"
-            >
-              Saved {{ getTimeAgo(lastSaved) }}
-            </div>
+            <textarea ref="srtEditor" v-model="transcriptionSRT" @input="handleSRTEdit" @keydown="handleEditorKeydown" class="w-full h-80 font-mono text-sm border-0 resize-none focus:ring-0 focus:outline-none p-4 leading-relaxed" placeholder="Transcription will appear here... \n\nFormat: \n1\n00:00:00,000 --> 00:00:05,000\nSubtitle text here" spellcheck="true"></textarea>
+            <div v-if="isAutoSaving" class="absolute top-2 right-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Saving...</div>
+            <div v-else-if="lastSaved" class="absolute top-2 right-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Saved {{ getTimeAgo(lastSaved) }}</div>
           </div>
-
-          <!-- Validation messages -->
-          <div
-            v-if="validationErrors.length > 0"
-            class="p-4 border-t bg-red-50"
-          >
-            <h4 class="text-sm font-medium text-red-800 mb-2">
-              Validation Errors
-            </h4>
+          <div v-if="validationErrors.length > 0" class="p-4 border-t bg-red-50">
+            <h4 class="text-sm font-medium text-red-800 mb-2">SRT Validation Errors:</h4>
             <ul class="text-xs text-red-700 space-y-1">
-              <li v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</li>
+              <li v-for="(error, index) in validationErrors" :key="index">• {{ error }}</li>
             </ul>
           </div>
-
-          <!-- Editor help -->
           <div class="p-4 border-t bg-blue-50">
             <details class="text-sm">
-              <summary class="cursor-pointer">SRT Editing Tips</summary>
-              <ul class="list-disc ml-5 mt-2">
-                <li>Each subtitle block should have a number, time range, and text.</li>
-                <li>Use the format: <code>00:00:00,000 --> 00:00:05,000</code></li>
-                <li>Separate blocks with a blank line.</li>
-              </ul>
+              <summary class="cursor-pointer text-blue-800 font-medium mb-2">Editing Tips</summary>
+              <div class="text-blue-700 space-y-1 text-xs">
+                <p>• <strong>Format:</strong> Each subtitle needs: number, timestamps, and text</p>
+                <p>• <strong>Timestamps:</strong> Format: 00:00:00,000 --> 00:00:05,000</p>
+                <p>• <strong>Shortcuts:</strong> Ctrl+S to save, Ctrl+A to select all</p>
+                <p>• <strong>Auto-save:</strong> Changes are saved automatically every 3 seconds</p>
+              </div>
             </details>
           </div>
         </div>
       </div>
-      <!-- ...existing code... -->
+      <div v-if="transcriptionSRT" class="flex justify-end mt-8">
+        <button @click="goToStep3" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-md">
+          <span>Next: Translate Subtitles</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </template>
