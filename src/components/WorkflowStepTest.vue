@@ -17,9 +17,10 @@
 </template>
 
 <script setup lang="ts">
-// Test Case 4: Add dynamic service import (should work with our fix)
+// Test Case 5: Add AudioUpload component (testing component imports)
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import AudioUpload from '@/components/AudioUpload.vue'
 import { useWorkflowState } from '@/composables/useWorkflowState'
 import {
   WHISPER_MODELS,
@@ -42,5 +43,36 @@ async function getWhisperService() {
 
 const router = useRouter()
 const { workflowState, updateArtifacts, setProcessing, completeStep } = useWorkflowState()
-const testValue = ref('Dynamic service import working - models: ' + WHISPER_MODELS.length)
+
+// Test the computed properties from WorkflowStep2
+const selectedModel = ref(WHISPER_MODELS[0].name)
+const isModelLoading = ref(false)
+const isTranscribing = ref(false)
+const uploadedAudioFile = ref<File | null>(null)
+
+const hasExtractedAudio = computed(
+  () => workflowState.artifacts.extractedAudio !== null
+)
+const hasAudioSource = computed(
+  () => hasExtractedAudio.value || uploadedAudioFile.value !== null
+)
+const whisperModels = computed(() => WHISPER_MODELS)
+
+const getSelectedModelName = computed(() => {
+  const model = WHISPER_MODELS.find(m => m.name === selectedModel.value)
+  return model?.displayName || selectedModel.value
+})
+
+const selectedModelInfo = computed(() => {
+  return WHISPER_MODELS.find(m => m.name === selectedModel.value)
+})
+
+const getTranscribeButtonText = computed(() => {
+  if (isModelLoading.value) return 'Loading Model...'
+  if (isTranscribing.value) return 'Generating Subtitles...'
+  // Always show download text since we can't easily check model state synchronously
+  return `Download ${getSelectedModelName.value} & Generate Subtitles`
+})
+
+const testValue = ref('All computed properties added - button: ' + getTranscribeButtonText.value)
 </script>
